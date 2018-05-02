@@ -39,7 +39,7 @@ SERVERNAME = "kasper"
 # Note that there are many more options available beyond these.
 
 # Telnet ports. Visible.
-TELNET_ENABLED = True
+TELNET_ENABLED = False
 TELNET_PORTS = [4000]
 # (proxy, internal). Only proxy should be visible.
 WEBSERVER_ENABLED = True
@@ -55,6 +55,34 @@ WEBSOCKET_CLIENT_ENABLED = True
 WEBSOCKET_CLIENT_PORT = 4005
 # Internal Server-Portal port. Not visible.
 AMP_PORT = 4006
+
+# terrain path relative to the script world.engine
+MAP_FOLDER = "resources"
+TERRAIN_MAP = "mappa_terreni.bin"
+TEMPERATURE_MAP = "mappa_temperature.bin"
+
+# Typeclass for account objects (linked to a character) (fallback)
+BASE_ACCOUNT_TYPECLASS = "typeclasses.accounts.Account"
+# Typeclass and base for all objects (fallback)
+BASE_OBJECT_TYPECLASS = "typeclasses.objects.Object"
+# Typeclass for character objects linked to an account (fallback)
+BASE_CHARACTER_TYPECLASS = "typeclasses.characters.TGCharacter"
+# Typeclass for rooms (fallback)
+BASE_ROOM_TYPECLASS = "typeclasses.rooms.TGStaticRoom"
+# Typeclass for Exit objects (fallback).
+BASE_EXIT_TYPECLASS = "typeclasses.exits.TGStaticExit"
+# Typeclass for Channel (fallback).
+BASE_CHANNEL_TYPECLASS = "typeclasses.channels.Channel"
+# Typeclass for Scripts (fallback). You usually don't need to change this
+# but create custom variations of scripts on a per-case basis instead.
+BASE_SCRIPT_TYPECLASS = "typeclasses.scripts.Script"
+
+# Default location for all objects
+DEFAULT_HOME = "#2"
+# The start position for new characters. Default is Limbo (#2).
+#  MULTISESSION_MODE = 0, 1 - used by default unloggedin create command
+#  MULTISESSION_MODE = 2,3 - used by default character_create command
+START_LOCATION = "#2"
 
 ######################################################################
 # Settings given in secret_settings.py override those in this file.
