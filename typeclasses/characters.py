@@ -25,10 +25,6 @@ class TGCharacter(Character):
     def coordinates(self, coordinates):
         self.ndb.coordinates = coordinates
 
-    @property
-    def last_valid_coordinate(self):
-        return self.db.last_valid_coordinates
-
     def at_before_move(self, destination, coordinates=None, **kwargs):
         """
         Called just before starting to move this object to
@@ -62,19 +58,20 @@ class TGCharacter(Character):
             account (Account): This is the connecting account.
             session (Session): Session controlling the connection.
         """
-        from typeclasses.map_engine import TGMapEngineFactory
+        from world.mapengine.map_engine import TGMapEngineFactory
         map_handler = TGMapEngineFactory().get()
         # mi asicuro di essere in una location valida
         if self.location is None:
             if self.db.last_valid_area == "wilderness":
                 # mi sposto in last_valid_coordinates o in home se fallisco, altrimenti esplodo
-                if not map_handler.move_grid(self, self.db.last_valid_coordinates, quiet=True):
-                    if not map_handler.move_grid(self, self.home.coordinates, quiet=True):
+                if not map_handler.move_obj(self, self.db.last_valid_coordinates, quiet=True, move_hooks=False):
+                    if not map_handler.move_obj(self, self.home.coordinates, quiet=True, move_hooks=False):
                         raise RuntimeError()
             else:
                 # se invece l'ultima zona non è la wild uso prelogout_location a manetta
                 # giusto per ricordarmi la last_valid_area è già coerente non devo aggiornarla
                 self.location = self.db.prelogout_location if self.db.prelogout_location else self.home
+
             self.location.at_object_receive(self, source_location=None)
         elif isinstance(self.location, TGDynamicRoom):
             # se è dinamic devo sto attento, faccio solo  affidamento  su last_valid_coordinate
@@ -82,8 +79,8 @@ class TGCharacter(Character):
             # mi sposto
             coordinates = self.location.coordinates
             if coordinates != self.db.last_valid_coordinates:
-                if not map_handler.move_grid(self, self.db.last_valid_coordinates, quiet=True):
-                    if not map_handler.move_grid(self, self.home.coordinates, quiet=True):
+                if not map_handler.move_obj(self, self.db.last_valid_coordinates, quiet=True, move_hooks=False):
+                    if not map_handler.move_obj(self, self.home.coordinates, quiet=True, move_hooks=False):
                         raise RuntimeError()
                 # alla fine mi ci  sposto occio indentatura, faccio solo riferimento il secondo if dei tre.
                 self.location.at_object_receive(self, source_location=None)
