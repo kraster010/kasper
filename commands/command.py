@@ -4,15 +4,8 @@ Commands
 Commands describe the input the account can do to the game.
 
 """
-import re
 
 from evennia import Command as BaseCommand
-
-# from evennia import default_cmds
-from evennia.commands.default.unloggedin import create_guest_account, _LATEST_FAILED_LOGINS, _throttle, \
-    create_normal_account
-
-from typeclasses.map_engine import TGMapEngineFactory
 
 
 class Command(BaseCommand):
@@ -48,6 +41,7 @@ class ShowMap(Command):
     help_category = "General"
 
     def func(self):
+        from world.mapengine.map_engine import TGMapEngineFactory
         tgengine = TGMapEngineFactory().get()
         map = tgengine._map_raw
         map_rows = tgengine.map_rows
