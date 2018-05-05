@@ -8,8 +8,9 @@ is setup to be the "default" character type created by the default
 creation commands.
 
 """
+from evennia.utils import logger
+
 from typeclasses.defaults.default_characters import Character
-from typeclasses.rooms import TGDynamicRoom
 
 
 class TGCharacter(Character):
@@ -59,39 +60,43 @@ class TGCharacter(Character):
             session (Session): Session controlling the connection.
         """
         from world.mapengine.map_engine import TGMapEngineFactory
+        from django.conf import settings
+
         map_handler = TGMapEngineFactory().get()
         # mi asicuro di essere in una location valida
+        logger.log_info(
+            "at_pre_puppet():\nself.location:{}\nself.db.last_valid_area:{}\nself.db.last_valid_coordinates:{}".format(
+                self.location, self.db.last_valid_area, self.db.last_valid_coordinates))
+
+        # Ogni volta che mi loggo self.location sarà None, altrimenti può succedere che puppetto qualcuno, e allora
+        # in base a dove parto devo stare attento
+
         if self.location is None:
-            if self.db.last_valid_area == "wilderness":
+
+            if self.db.last_valid_area == settings.WILD_AREA_NAME or map_handler._rooms.contains(
+                    self.db.last_valid_coordinates):
+
                 # mi sposto in last_valid_coordinates o in home se fallisco, altrimenti esplodo
                 if not map_handler.move_obj(self, self.db.last_valid_coordinates, quiet=True, move_hooks=False):
-                    if not map_handler.move_obj(self, self.home.coordinates, quiet=True, move_hooks=False):
-                        raise RuntimeError()
+                    if not self.home:
+                        raise RuntimeError
+                    self.location = self.home
+
             else:
-                # se invece l'ultima zona non è la wild uso prelogout_location a manetta
+                # se invece l'ultima zona non è la wild uso prelogout_location
                 # giusto per ricordarmi la last_valid_area è già coerente non devo aggiornarla
                 self.location = self.db.prelogout_location if self.db.prelogout_location else self.home
 
             self.location.at_object_receive(self, source_location=None)
-        elif isinstance(self.location, TGDynamicRoom):
-            # se è dinamic devo sto attento, faccio solo  affidamento  su last_valid_coordinate
-            # se poi è uguale a quella li va bene, altrimenti per rendere coerente self.location
-            # mi sposto
-            coordinates = self.location.coordinates
-            if coordinates != self.db.last_valid_coordinates:
-                if not map_handler.move_obj(self, self.db.last_valid_coordinates, quiet=True, move_hooks=False):
-                    if not map_handler.move_obj(self, self.home.coordinates, quiet=True, move_hooks=False):
-                        raise RuntimeError()
-                # alla fine mi ci  sposto occio indentatura, faccio solo riferimento il secondo if dei tre.
-                self.location.at_object_receive(self, source_location=None)
 
         if self.location:
-            # aggiorno tutto
-            if not self.location.is_static:
-                self.db.last_valid_coordinate = self.location.coordinates
-                self.db.last_valid_area = "wilderness"
-            else:
-                self.db.prelogout_location = self.location  # save location again to be sure.
+            # aggiorno tutto sapendo che self.location è pronta
+
+            if self.location.coordinates:
+                self.db.last_valid_coordinates = self.location.coordinates
+
+            self.db.last_valid_area = self.location.tags.get(category="area")
+            self.db.prelogout_location = self.location  # save location again to be sure.
         else:
             account.msg("|r%s non ha una stanza settata e nemmeno una home.|n" % self, session=session)
 
@@ -112,12 +117,20 @@ class TGCharacter(Character):
         if not self.sessions.count():
             # only remove this char from grid if no sessions control it anymore.
             if self.location:
+                from django.conf import settings
                 def message(obj, from_obj):
                     obj.msg("%s ha lasciato il gioco." % self.get_display_name(obj), from_obj=from_obj)
 
                 self.location.for_contents(message, exclude=[self], from_obj=self)
-                if not self.location.is_static:
-                    self.db.last_valid_coordinate = self.location.coordinates
-                    self.db.last_valid_area = "winderness"
+                if self.location.coordinates:
+                    self.db.last_valid_coordinates = self.location.coordinates
+
                 self.db.prelogout_location = self.location
+                self.db.last_valid_area = self.location.tags.get(category="area")
+
+                logger.log_info(
+                    "at_post_unpuppet():"
+                    "\nlast_valid_coordinates{}\nself.last_valid_area:{}\nself.db.prelogout_location:{}".format(
+                        self.db.last_valid_coordinates, self.db.last_valid_area, self.db.prelogout_location))
+
                 self.location = None

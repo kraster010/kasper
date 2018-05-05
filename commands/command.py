@@ -43,18 +43,20 @@ class ShowMap(Command):
     def func(self):
         from world.mapengine.map_engine import TGMapEngineFactory
         tgengine = TGMapEngineFactory().get()
-        map = tgengine._map_raw
         map_rows = tgengine.map_rows
         map_cols = tgengine.map_cols
 
         s = ""
 
+        coordinates = self.caller.location.coordinates if self.caller.location else (-1, -1)
+
         for row in range(0, map_rows):
             for col in range(0, map_cols):
-                if (row, col) == self.caller.coordinates:
+                c_coordinates = (row, col)
+                if c_coordinates == coordinates:
                     s += "X "
                 else:
-                    s += str(map[row * map_cols + col]) + " "
+                    s += str(tgengine.get_terrain_id(c_coordinates)) + " "
             s += "\n"
 
         self.caller.msg(s)

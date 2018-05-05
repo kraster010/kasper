@@ -7,11 +7,9 @@ set and has a single command defined on itself with the same name as its key,
 for allowing Characters to traverse the exit to its destination.
 
 """
-
 from typeclasses.defaults.default_exits import Exit
 from typeclasses.defaults.default_objects import Object
-
-from utils.map_utils import get_new_coordinates
+from world.mapengine.map_utils import get_new_coordinates
 
 
 class TGStaticExit(Exit):

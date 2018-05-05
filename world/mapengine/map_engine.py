@@ -1,38 +1,14 @@
 # -*- coding: utf-8 -*-
 import random
 
+from django.conf import settings
 from evennia import create_script, create_object
-from evennia.utils import lazy_property
+from evennia.utils import lazy_property, logger
 
 from resources.terreni_desc import get_room_data
 from typeclasses.defaults.default_scripts import Script
-from utils.map_utils import load_map_from_file, get_new_coordinates
 from utils.tg_handlers import TGHandlerDict
-
-"""
-una stanza può contenere:
-- oggetti
-- pg
-- mob
-- deve essere possibile attaccare uno script ad una stanza
-- deve essere possibile richiamare le stanze in una qualche maniera
-- le stanze devono avere una descrizione e un titolo
-- 
-
-"""
-"""
-Esistono due tipi di stanze primarie nel mondo. 
-
-stanze statiche e stanze dinamiche.
-
-stanze statiche sono stanze sempre presenti nel db. possono rappresentare
-una qualunque tipologia di mappa e si  sfruttano le classice uscite di ogni
-diku mud.
-
-stanze dinamiche, sono stanze che vengono create on demand a partire da 
-informazioni statiche. esiste una pool di stanze vuote da che vivono sul db
-da cui attingere quando serve creare una nuova stanza. 
-"""
+from world.mapengine.map_utils import load_map_from_file, get_new_coordinates
 
 
 class TGMapEngineFactory(object):
@@ -41,7 +17,7 @@ class TGMapEngineFactory(object):
     def __init__(self):
         if not TGMapEngineFactory._instance:
             if not TGMapEngine.objects.filter(db_key="map_engine").exists():
-                print "creo il map engine per la prima ed  ultima volta."
+                print "creo il map engine."
                 TGMapEngineFactory._instance = create_script(TGMapEngine, key="map_engine", persistent=True, obj=None)
             else:
                 print "carico il map engine."
@@ -55,6 +31,14 @@ class TGMapEngineFactory(object):
 class TGMapEngineRoomHandler(TGHandlerDict):
     def __init__(self, obj):
         super(TGMapEngineRoomHandler, self).__init__(obj, "_active_rooms")
+
+    def remove(self, key):
+        if self.contains(key):
+            del self.obj.db._active_rooms[key]
+            self._cache()
+            return True
+
+        return False
 
 
 class TGMapEngine(Script):
@@ -82,7 +66,15 @@ class TGMapEngine(Script):
     def _soft_init(self):
         w, h, map = load_map_from_file()
         self.ndb.static_map = dict(rows=h, cols=w, raw=map)
-        for coordinates, room in self.db._active_rooms.items():
+
+        for coordinates, room in self._rooms.items():
+            if not room:
+                self._rooms.remove(coordinates)
+                logger.log_info("Rimuovo la stanza [ {} -> {} ] dal map handler.".format(coordinates, room))
+            if room.is_deletable():
+                self.delete_room(coordinates=coordinates)
+                logger.log_info("Rimuovo la stanza [ {} -> {} ] dal map handler.".format(coordinates, room))
+                continue
             if not room.is_static:
                 self.apply_static_definition(room, coordinates=coordinates)
             room.map_handler = self
@@ -99,6 +91,7 @@ class TGMapEngine(Script):
 
     def get_terrain_id(self, coordinates):
         x, y = coordinates
+        y = self.map_cols - y - 1
         return self._map_raw[x * self.map_cols + y]
 
     @property
@@ -115,6 +108,7 @@ class TGMapEngine(Script):
 
     def is_valid_coordinates(self, coordinates):
         x, y = coordinates
+        y = self.map_cols - y - 1
         return 0 <= x < self.map_rows and 0 <= y < self.map_cols
 
     # ------------------ HOOKS ------------------ #
@@ -173,7 +167,6 @@ class TGMapEngine(Script):
         # ------------ la room esiste già, si mergiano ----------------- #
 
         if room:
-            print "\n\nla sto  riutilizzando!!!!!\n\n"
             if room == obj_to_move.location:
                 report_to.msg("Non puoi andare dove sei già!")
                 return False
@@ -209,6 +202,12 @@ class TGMapEngine(Script):
             # Perform move
             try:
                 obj_to_move.location = room
+                obj_to_move.coordinates = new_coordinates
+                # quando mi sposto in una stanza room statica -> mergio, allora salvo
+                if room.is_static:
+                    obj_to_move.db.last_valid_coordinates = new_coordinates
+                    obj_to_move.db.last_valid_area = room.tags.get(category="area")
+
             except Exception as err:
                 print "location change: %s" % err
                 return False
@@ -239,6 +238,7 @@ class TGMapEngine(Script):
                     print "at_after_move(): %s" % err
                     return False
 
+            # mergio le stanze quindi deleto la vecchia se necessaraio
             if old_room and old_room.is_deletable():
                 self.delete_room(room=old_room)
 
@@ -309,6 +309,7 @@ class TGMapEngine(Script):
         # Perform move
         try:
             obj_to_move.location = room
+            obj_to_move.coordinates = new_coordinates
         except Exception as err:
             print "location change: %s" % err
             return False
@@ -345,7 +346,9 @@ class TGMapEngine(Script):
 
     @staticmethod
     def _create_room_factory(typeclass, key, report_to=None):
-        return create_object(typeclass=typeclass, key=key, nohome=True, report_to=report_to)
+        c_obj = create_object(typeclass=typeclass, key=key, nohome=True, report_to=report_to)
+        c_obj.tags.add(settings.WILD_AREA_NAME, category="Area")
+        return c_obj
 
     @staticmethod
     def _create_exit_factory(typeclass, key, aliases, location, destination, report_to=None):
@@ -356,10 +359,13 @@ class TGMapEngine(Script):
                              destination=destination,
                              report_to=report_to)
 
-    def create_static_room(self, coordinates, key=None, report_to=None):
+    def create_static_room(self, coordinates, area=None, key=None, report_to=None):
         # sta meglio messo qui invece che nei  parametri il  default
         if not key:
             key = "wild_{}_{}".format(coordinates[0], coordinates[1])
+
+        if not area:
+            area = self.location.tags.get(category="area")
 
         if self.get_room(coordinates):
             print "c'è già una stanza in quelle coordinate"
@@ -367,6 +373,7 @@ class TGMapEngine(Script):
 
         # ad una static room non serve applicare room_data quindi la creo, e la torno
         room = TGMapEngine._create_room_factory(typeclass=self.static_room_type, key=key, report_to=report_to)
+        room.tags.add(area, category="Area")
         self._rooms.add(coordinates, room)
         return room
 
@@ -407,11 +414,12 @@ class TGMapEngine(Script):
             # devo solo togliere la location
             # importante perche per essere una exit devi avere almeno destination settatata
             # quindi la mettiamo solo da parte
-            if d_exit.key not in self.default_exits:
+            d_e_key = d_exit.key
+            if d_e_key not in self.default_exits:
                 d_exit.location = None
                 self.db._garage_exits.append(d_exit)
             else:
-                del missing[d_exit.key]
+                del missing[d_e_key]
 
         for key, alias in missing.items():
             aliases = [alias]
@@ -432,16 +440,17 @@ class TGMapEngine(Script):
     def delete_room(self, coordinates=None, room=None, report_to=None):
         if room:
             coordinates = room.coordinates
+
         if not coordinates:
             return False
-        ret = self._rooms.remove(coordinates)
-        if ret:
+
+        if self._rooms.remove(coordinates):
             self._dispose_dynamic_room(room, report_to=report_to)
+            return True
         else:
             # allora non è tra gli active_rooms
             # non sono autorizzato a cancellare
             return False
-        return True
 
     def apply_static_definition(self, room, coordinates):
         id_terreno = self.get_terrain_id(coordinates=coordinates)

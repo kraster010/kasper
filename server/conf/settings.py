@@ -58,6 +58,7 @@ AMP_PORT = 4006
 
 # terrain path relative to the script world.engine
 MAP_FOLDER = os.path.join("world", "mapengine", "resources")
+WILD_AREA_NAME = "wild"
 TERRAIN_MAP = "mappa_terreni.bin"
 TEMPERATURE_MAP = "mappa_temperature.bin"
 

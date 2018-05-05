@@ -41,13 +41,10 @@ class TGHandlerDict(object):
         self.obj.attributes.get(self.attr_name, default={})[key] = value
         self.attr_cached[key] = value
 
-    def remove(self, coordinates):
-        if coordinates in self.attr_cached:
-            d_room = self.obj.db._active_rooms[coordinates]
-            del self.obj.db._active_rooms[coordinates]
-            self._cache()
-            return d_room
+    def contains(self,key):
+        return key in self.attr_cached
 
+    def remove(self, key):
         return False
 
     def items(self):

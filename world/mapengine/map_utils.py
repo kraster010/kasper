@@ -3,7 +3,6 @@ def load_map_from_file():
     from django.conf import settings
     map_path = os.path.join(settings.MAP_FOLDER, settings.TERRAIN_MAP)
     print "loaded map at: %s" % map_path
-
     if not map_path:
         raise RuntimeError("mappa mancante!! {}".format(map_path))
 
