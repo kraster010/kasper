@@ -57,7 +57,7 @@ WEBSOCKET_CLIENT_PORT = 4005
 AMP_PORT = 4006
 
 # terrain path relative to the script world.engine
-MAP_FOLDER = "resources"
+MAP_FOLDER = os.path.join("world", "mapengine", "resources")
 TERRAIN_MAP = "mappa_terreni.bin"
 TEMPERATURE_MAP = "mappa_temperature.bin"
 
@@ -83,6 +83,8 @@ DEFAULT_HOME = "#2"
 #  MULTISESSION_MODE = 0, 1 - used by default unloggedin create command
 #  MULTISESSION_MODE = 2,3 - used by default character_create command
 START_LOCATION = "#2"
+
+INSTALLED_APPS = INSTALLED_APPS + ("world.mapengine",)
 
 print "http://localhost:4001/webclient/"
 ######################################################################
