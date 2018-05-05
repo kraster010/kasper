@@ -72,8 +72,8 @@ def stop(reset=False, migrate=False):
 
         try:
             s = check_output(
-                ["workon", virtual_env, "&", "django-admin", "createsuperuser", "--username", "a", "--email", "a@a.it",
-                 "--noinput", "--settings=server.conf.settings"], shell=True)
+                ["workon", virtual_env, "&", "django-admin", "createsuperuser_no_psw", "--username", "a", "--email", "a@a.it",
+                 "--password", "1234", "--noinput", "--settings=server.conf.settings"], shell=True)
             print s
         except CalledProcessError:
             pass
