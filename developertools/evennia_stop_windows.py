@@ -5,14 +5,10 @@ from subprocess import check_output, CalledProcessError
 
 def stop(reset=False, migrate=False):
     """
-    tool per chiudere evennia completamente
+    tool windows-only per chiudere evennia completamente
     """
     # cambiare con il proprio virtual env
     virtual_env = "kasper"
-
-    if len(check_output(["workon", virtual_env], shell=True).strip()) > 0:
-        print "Non hai nessun virtual env con nome: %s\n"
-        return
 
     try:
         s = check_output(["workon", virtual_env, "&", "echo", "%cd%"], shell=True).strip()
@@ -21,7 +17,10 @@ def stop(reset=False, migrate=False):
                   "devo finire nella home del progetto) ma è necessario per eseguire questo script."
             return
     except CalledProcessError:
-        pass
+        if migrate:
+            print "Per migrare è necessario avere un virtualenv configurato con nome: %s (il nome è possibile " \
+                  "cambiarlo dallo script)\n" % virtual_env
+            return
 
     try:
         check_output(["Taskkill", "/IM", "twistd.exe", "/F"], shell=True)

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Exits
 
@@ -6,32 +7,94 @@ set and has a single command defined on itself with the same name as its key,
 for allowing Characters to traverse the exit to its destination.
 
 """
-from evennia import DefaultExit
+
+from typeclasses.defaults.default_exits import Exit
+from typeclasses.defaults.default_objects import Object
+
+from utils.map_utils import get_new_coordinates
 
 
-class Exit(DefaultExit):
+class TGStaticExit(Exit):
     """
-    Exits are connectors between rooms. Exits are normal Objects except
-    they defines the `destination` property. It also does work in the
-    following methods:
+    Una exit statica è una exit che va posizionata in una room statica
+    e può portare ad una stanza statica.
 
-     basetype_setup() - sets default exit locks (to change, use `at_object_creation` instead).
-     at_cmdset_get(**kwargs) - this is called when the cmdset is accessed and should
-                              rebuild the Exit cmdset along with a command matching the name
-                              of the Exit object. Conventionally, a kwarg `force_init`
-                              should force a rebuild of the cmdset, this is triggered
-                              by the `@alias` command when aliases are changed.
-     at_failed_traverse() - gives a default error message ("You cannot
-                            go there") if exit traversal fails and an
-                            attribute `err_traverse` is not defined.
-
-    Relevant hooks to overload (compared to other types of Objects):
-        at_traverse(traveller, target_loc) - called to do the actual traversal and calling of the other hooks.
-                                            If overloading this, consider using super() to use the default
-                                            movement implementation (and hook-calling).
-        at_after_traverse(traveller, source_loc) - called by at_traverse just after traversing.
-        at_failed_traverse(traveller) - called by at_traverse if traversal failed for some reason. Will
-                                        not be called if the attribute `err_traverse` is
-                                        defined, in which case that will simply be echoed.
     """
     pass
+
+
+class TGDynamicExit(Exit):
+    """
+    Una exit dinamica collega una stanza del map handler con un'altra stanza del maphandler
+    """
+
+    def at_traverse(self, traversing_object, target_location, **kwargs):
+        """
+         This hook is responsible for handling the actual traversal,
+        normally by calling
+        `traversing_object.move_to(target_location)`. It is normally
+        only implemented by Exit objects. If it returns False (usually
+        because `move_to` returned False), `at_after_traverse` below
+        should not be called and instead `at_failed_traverse` should be
+        called.
+
+        Args:
+           Args:
+            traversing_object (Object): Object traversing us.
+            target_location (Object): Where target is going.
+            **kwargs (dict): Arbitrary, optional arguments for users
+                overriding the call (unused by default).
+
+        """
+        old_room = traversing_object.location
+        old_coordinates = old_room.coordinates
+
+        if old_room.map_handler.move_obj(traversing_object,
+                                         new_coordinates=get_new_coordinates(old_coordinates, self.key),
+                                         report_to=traversing_object):
+            self.at_after_traverse(traversing_object, old_room)
+        else:
+            if self.db.err_traverse:
+                # if exit has a better error message, let's use it.
+                self.caller.msg(self.db.err_traverse)
+            else:
+                # No shorthand error message. Call hook.
+                self.at_failed_traverse(traversing_object)
+
+    def at_after_traverse(self, traversing_object, source_location, **kwargs):
+        """
+        Called just after an object successfully used this object to
+        traverse to another object (i.e. this object is a type of
+        Exit)
+
+        Args:
+            traversing_object (Object): The object traversing us.
+            source_location (Object): Where `traversing_object` came from.
+            **kwargs (dict): Arbitrary, optional arguments for users
+                overriding the call (unused by default).
+
+        Notes:
+            The target location should normally be available as `self.destination`.
+        """
+        pass
+
+    def at_failed_traverse(self, traversing_object, **kwargs):
+        """
+        Overloads the default hook to implement a simple default error message.
+
+        Args:
+            traversing_object (Object): The object that failed traversing us.
+            **kwargs (dict): Arbitrary, optional arguments for users
+                overriding the call (unused by default).
+
+        Notes:
+            Using the default exits, this hook will not be called if an
+            Attribute `err_traverse` is defined - this will in that case be
+            read for an error string instead.
+
+        """
+        traversing_object.msg("Non puoi andare qui.")
+
+    @property
+    def is_static(self):
+        return False

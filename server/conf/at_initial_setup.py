@@ -17,38 +17,60 @@ does what you expect it to.
 from evennia import search_object, ObjectDB, AccountDB
 from evennia.server.initial_setup import get_god_account
 from evennia.utils import create
-from typeclasses.characters import TGCharacter
 from typeclasses.exits import TGStaticExit, TGDynamicExit
 from typeclasses.map_engine import TGMapEngineFactory
 from typeclasses.rooms import TGStaticRoom
 from django.conf import settings
 
 
-def create_test_character(id, pg_name):
-    test = create.create_account("test%i" % id, email="test%i@test.com" % id, password="%i" % id,
-                                 typeclass=settings.BASE_ACCOUNT_TYPECLASS)
+def set_playable_character(character, account):
+    account.db.FIRST_LOGIN = True
+    account.db._playable_characters.append(character)
+    account.db._last_puppet = character
 
-    test_pg = create.create_object(TGCharacter, key=pg_name)
 
-    test.attributes.add("_first_login", True)
-    test.attributes.add("_last_puppet", test_pg)
+def create_second_admin(pg_name, home):
+    new_account = create.create_account(key=pg_name, email="test%s@test.com" % pg_name, password="1234",
+                                        typeclass=settings.BASE_ACCOUNT_TYPECLASS, is_superuser=True,
+                                        permissions="Developer",
+                                        locks="examine:perm(Developer);edit:false();delete:false();boot:false();msg:all()")
 
-    try:
-        test.db._playable_characters.append(test_pg)
-    except AttributeError:
-        test.db_playable_characters = [test_pg]
+    new_character = create.create_object(typeclass=settings.BASE_CHARACTER_TYPECLASS, key=new_account.key, home=home,
+                                         locks="examine:perm(Developer);edit:false();delete:false();boot:false();msg:all();puppet:false()")
 
-    return test_pg
+    set_playable_character(new_character, new_account)
+
+    new_character.db.desc = "This is %s." % pg_name
+
+    return new_character
+
+
+def create_test_character(pg_name, home):
+    new_account = create.create_account(pg_name, email="test%s@test.com" % pg_name, password="1234",
+                                        typeclass=settings.BASE_ACCOUNT_TYPECLASS,
+                                        permissions=settings.PERMISSION_ACCOUNT_DEFAULT)
+
+    new_character = create.create_object(settings.BASE_CHARACTER_TYPECLASS, key=new_account.key, home=home)
+
+    set_playable_character(new_character, new_account)
+
+    # allow only the character itself and the account to puppet this character (and Developers).
+    new_character.locks.add("puppet:id(%i) or pid(%i) or perm(Developer) or pperm(Developer)" %
+                            (new_character.id, new_account.id))
+
+    # If no description is set, set a default description
+    new_character.db.desc = "This is %s." % pg_name
+
+    return new_character
 
 
 def costruisci_interno_grotta(grotta_lunare):
-    dentro1 = create.create_object(TGStaticRoom, key="GrottaLunare_1", nohome=True)
+    dentro1 = create.create_object(TGStaticRoom, key="Dentro una grotta", nohome=True)
     dentro1.desc = "Le pareti rocciose trasudano acqua, ci deve essere dell'acqua più in fondo."
     dentro1.titolo = "Dentro una grotta"
 
-    dentro2 = create.create_object(TGStaticRoom, key="GrottaLunareTrono", nohome=True)
-    dentro2.desc = "Un trono avvolto da un groviglio di spade posa al centro della stanza su un piedistallo di " \
-                   "pietra bianca squadrata."
+    dentro2 = create.create_object(TGStaticRoom, key="Una grande voragine", nohome=True)
+    dentro2.desc = "Impensabile trovare una voragine di tali dimensioni."
 
     dentro2.titolo = "Dentro una grotta"
 
@@ -84,16 +106,14 @@ def costruisci_interno_grotta(grotta_lunare):
 
 
 def at_initial_setup():
-
     # prendo Limbo e la trasformo (è una stanza di tipo TGStaticRoom se non cambiano le configurazioni di default nuove)
     try:
         grotta_lunare = search_object("#2")[0]
     except ObjectDB.DoesNotExist:
         raise ObjectDB.DoesNotExist("Limbo non esiste")
 
-    grotta_lunare.key = "GrottaLunare"
+    grotta_lunare.key = "Grotta Lunare"
     grotta_lunare.desc = "Un luogo quasi buio se non fosse per lievi raggi di luce che arrivano da più lontano."
-    grotta_lunare.titolo = "Grotta Lunare"
     grotta_lunare.coordinates = (5, 5)
 
     costruisci_interno_grotta(grotta_lunare)
@@ -126,34 +146,21 @@ def at_initial_setup():
     # aggiungo  la grotta_lunare_nella lista delle rooms essendo diciamo un "portale
     map_engine._rooms.add(grotta_lunare.coordinates, grotta_lunare)
 
-    #
-    # pre_fuori = create.create_object(TGStaticRoom, key="wilderness_key", nohome=True)
-    #
-    # wild_exit_n = create.create_object(typeclass=TGStaticExit,
-    #                                    key="nord",
-    #                                    aliases=["n"],
-    #                                    location=grotta_lunare,
-    #                                    destination=grotta_lunare,
-    #                                    report_to=None)
-    #
-    # wild_exit_s = create.create_object(typeclass=TGStaticExit,
-    #                                    key="sud",
-    #                                    aliases=["s"],
-    #                                    location=grotta_lunare,
-    #                                    destination=grotta_lunare,
-    #                                    report_to=None)
+    # create the true admin
+    aldo = create_second_admin("aldo", grotta_lunare)
+
+    aldo.desc = "This is ET."
 
     try:
         god_character = search_object("#1")[0]
     except ObjectDB.DoesNotExist:
         raise ObjectDB.DoesNotExist("God character non esiste")
 
-    god_character.location = grotta_lunare
-    god_character.home = grotta_lunare
+    god_character.location = None
 
     # creo due account di test con relativo pg
-    t1_pg = create_test_character(1, "hugo")
-    t1_pg.attributes.add("prelogout_location", grotta_lunare)
+    t1_pg = create_test_character("hugo", grotta_lunare)
+    t1_pg.desc = "Un vecchio lupo di mare con qualche dente in meno."
 
-    t2_pg = create_test_character(2, "sugo")
-    t2_pg.attributes.add("prelogout_location", grotta_lunare)
+    t2_pg = create_test_character("sugo", grotta_lunare)
+    t2_pg.desc = "Un uomo sfoggia un grembiule bianco smanicato."

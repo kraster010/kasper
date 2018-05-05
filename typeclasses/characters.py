@@ -1,3 +1,4 @@
+# coding=utf-8
 """
 Characters
 
@@ -7,27 +8,119 @@ is setup to be the "default" character type created by the default
 creation commands.
 
 """
-from evennia import DefaultCharacter
+from typeclasses.defaults.default_characters import Character
+from typeclasses.rooms import TGDynamicRoom
 
 
-class Character(DefaultCharacter):
-    """
-    The Character defaults to reimplementing some of base Object's hook methods with the
-    following functionality:
+class TGCharacter(Character):
 
-    at_basetype_setup - always assigns the DefaultCmdSet to this object type
-                    (important!)sets locks so character cannot be picked up
-                    and its commands only be called by itself, not anyone else.
-                    (to change things, use at_object_creation() instead).
-    at_after_move(source_location) - Launches the "look" command after every move.
-    at_post_unpuppet(account) -  when Account disconnects from the Character, we
-                    store the current location in the pre_logout_location Attribute and
-                    move it to a None-location so the "unpuppeted" character
-                    object does not need to stay on grid. Echoes "Account has disconnected"
-                    to the room.
-    at_pre_puppet - Just before Account re-connects, retrieves the character's
-                    pre_logout_location Attribute and move it back on the grid.
-    at_post_puppet - Echoes "AccountName has entered the game" to the room.
+    def at_object_creation(self):
+        self.coordinates = None
 
-    """
-    pass
+    @property
+    def coordinates(self):
+        return self.ndb.coordinates
+
+    @coordinates.setter
+    def coordinates(self, coordinates):
+        self.ndb.coordinates = coordinates
+
+    @property
+    def last_valid_coordinate(self):
+        return self.db.last_valid_coordinates
+
+    def at_before_move(self, destination, coordinates=None, **kwargs):
+        """
+        Called just before starting to move this object to
+        destination.
+
+        Args:
+            destination (Object): The object we are moving to, which can be non for the wild map
+            **kwargs (dict): Arbitrary, optional arguments for users
+                overriding the call (unused by default).
+
+        Returns:
+            shouldmove (bool): If we should move or not.
+
+        Notes:
+            If this method returns False/None, the move is cancelled
+            before it is even started.
+
+        """
+
+        if not destination:
+            if not coordinates:
+                return False
+
+        # return has_perm(self, destination, "can_move")
+        return True
+
+    def at_pre_puppet(self, account, session=None, **kwargs):
+        """
+        Return the character from storage in None location in `at_post_unpuppet`.
+        Args:
+            account (Account): This is the connecting account.
+            session (Session): Session controlling the connection.
+        """
+        from typeclasses.map_engine import TGMapEngineFactory
+        map_handler = TGMapEngineFactory().get()
+        # mi asicuro di essere in una location valida
+        if self.location is None:
+            if self.db.last_valid_area == "wilderness":
+                # mi sposto in last_valid_coordinates o in home se fallisco, altrimenti esplodo
+                if not map_handler.move_grid(self, self.db.last_valid_coordinates, quiet=True):
+                    if not map_handler.move_grid(self, self.home.coordinates, quiet=True):
+                        raise RuntimeError()
+            else:
+                # se invece l'ultima zona non è la wild uso prelogout_location a manetta
+                # giusto per ricordarmi la last_valid_area è già coerente non devo aggiornarla
+                self.location = self.db.prelogout_location if self.db.prelogout_location else self.home
+            self.location.at_object_receive(self, source_location=None)
+        elif isinstance(self.location, TGDynamicRoom):
+            # se è dinamic devo sto attento, faccio solo  affidamento  su last_valid_coordinate
+            # se poi è uguale a quella li va bene, altrimenti per rendere coerente self.location
+            # mi sposto
+            coordinates = self.location.coordinates
+            if coordinates != self.db.last_valid_coordinates:
+                if not map_handler.move_grid(self, self.db.last_valid_coordinates, quiet=True):
+                    if not map_handler.move_grid(self, self.home.coordinates, quiet=True):
+                        raise RuntimeError()
+                # alla fine mi ci  sposto occio indentatura, faccio solo riferimento il secondo if dei tre.
+                self.location.at_object_receive(self, source_location=None)
+
+        if self.location:
+            # aggiorno tutto
+            if not self.location.is_static:
+                self.db.last_valid_coordinate = self.location.coordinates
+                self.db.last_valid_area = "wilderness"
+            else:
+                self.db.prelogout_location = self.location  # save location again to be sure.
+        else:
+            account.msg("|r%s non ha una stanza settata e nemmeno una home.|n" % self, session=session)
+
+    def at_post_unpuppet(self, account, session=None, **kwargs):
+        """
+        We stove away the character when the account goes ooc/logs off,
+        otherwise the character object will remain in the room also
+        after the account logged off ("headless", so to say).
+
+        Args:
+            account (Account): The account object that just disconnected
+                from this object.
+            session (Session): Session controlling the connection that
+                just disconnected.
+            **kwargs (dict): Arbitrary, optional arguments for users
+                overriding the call (unused by default).
+        """
+        if not self.sessions.count():
+            # only remove this char from grid if no sessions control it anymore.
+            if self.location:
+                def message(obj, from_obj):
+                    obj.msg("%s ha lasciato il gioco." % self.get_display_name(obj), from_obj=from_obj)
+
+                self.location.for_contents(message, exclude=[self], from_obj=self)
+                if not self.location.is_static:
+                    self.db.last_valid_coordinate = self.location.coordinates
+                    self.db.last_valid_area = "winderness"
+                self.db.prelogout_location = self.location
+                self.location = None

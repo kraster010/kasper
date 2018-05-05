@@ -2,12 +2,17 @@
 # L'assegnamento è posizionale, non cambiarlo se non si fa cosa  si fa
 __all__ = ["get_room_data"]
 
-__inverse_byte_map = ["TerrainOceano", "TerrainPianura", "TerrainCollina", "TerrainMontagna", "TerrainFiume",
-                      "TerrainSorgenteFiume"]
+__inverse_byte_map = ["TerrainNone", "TerrainOceano", "TerrainPianura", "TerrainCollina",
+                      "TerrainMontagna", "TerrainFiume", "TerrainSorgenteFiume"]
 
 
 def get_room_data(id_terreno):
     return globals()[__inverse_byte_map[id_terreno]]
+
+
+class TerrainNone(object):
+    titolo = "Nulla"
+    descrizioni = ["Nulla1"]
 
 
 class TerrainOceano(object):

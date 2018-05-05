@@ -62,7 +62,7 @@ TERRAIN_MAP = "mappa_terreni.bin"
 TEMPERATURE_MAP = "mappa_temperature.bin"
 
 # Typeclass for account objects (linked to a character) (fallback)
-BASE_ACCOUNT_TYPECLASS = "typeclasses.accounts.Account"
+BASE_ACCOUNT_TYPECLASS = "typeclasses.defaults.default_accounts.Account"
 # Typeclass and base for all objects (fallback)
 BASE_OBJECT_TYPECLASS = "typeclasses.objects.Object"
 # Typeclass for character objects linked to an account (fallback)
@@ -72,10 +72,10 @@ BASE_ROOM_TYPECLASS = "typeclasses.rooms.TGStaticRoom"
 # Typeclass for Exit objects (fallback).
 BASE_EXIT_TYPECLASS = "typeclasses.exits.TGStaticExit"
 # Typeclass for Channel (fallback).
-BASE_CHANNEL_TYPECLASS = "typeclasses.channels.Channel"
+BASE_CHANNEL_TYPECLASS = "typeclasses.defaults.default_channels.Channel"
 # Typeclass for Scripts (fallback). You usually don't need to change this
 # but create custom variations of scripts on a per-case basis instead.
-BASE_SCRIPT_TYPECLASS = "typeclasses.scripts.Script"
+BASE_SCRIPT_TYPECLASS = "typeclasses.defaults.default_scripts.Script"
 
 # Default location for all objects
 DEFAULT_HOME = "#2"
@@ -84,6 +84,7 @@ DEFAULT_HOME = "#2"
 #  MULTISESSION_MODE = 2,3 - used by default character_create command
 START_LOCATION = "#2"
 
+print "http://localhost:4001/webclient/"
 ######################################################################
 # Settings given in secret_settings.py override those in this file.
 ######################################################################

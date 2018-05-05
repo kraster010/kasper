@@ -53,3 +53,5 @@ nosetests.xml
 
 # WorlEngine Maps file
 tools/worldengineadapter/dataset/*
+
+*.bin

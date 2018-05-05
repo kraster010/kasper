@@ -13,7 +13,7 @@ to add/remove commands from the default lineup. You can create your
 own cmdsets by inheriting from them or directly from `evennia.CmdSet`.
 
 """
-
+from commands import command
 from evennia import default_cmds
 
 
@@ -33,6 +33,7 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         #
         # any commands you add below will overload the default ones.
         #
+        self.add(command.ShowMap())
 
 
 class AccountCmdSet(default_cmds.AccountCmdSet):
