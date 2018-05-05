@@ -169,3 +169,5 @@ def at_initial_setup():
     t2_pg.db.prelogout_location = grotta_lunare
     t2_pg.db.last_valid_area = grotta_lunare_area
     t2_pg.db.last_valid_coordinates = grotta_lunare.coordinates
+
+    logger.log_info("at_initial_setup(): script completato.")
