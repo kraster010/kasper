@@ -1,4 +1,6 @@
 from evennia import DefaultObject
+from evennia.utils import lazy_property
+from utils.tg_handlers import TGDescriptionHandler
 
 
 class Object(DefaultObject):
@@ -149,15 +151,25 @@ class Object(DefaultObject):
 
      """
 
-    def return_appearance(self, looker, **kwargs):
+    @lazy_property
+    def __description_handler(self):
+        return TGDescriptionHandler(self)
+
+    @property
+    def desc(self):
+        return self.__description_handler.get()
+
+    @desc.setter
+    def desc(self, description):
+        self.__description_handler.add(description)
+
+    def return_appearance(self, looker):
         """
         This formats a description. It is the hook a 'look' command
         should call.
 
         Args:
             looker (Object): Object doing the looking.
-            **kwargs (dict): Arbitrary, optional arguments for users
-                overriding the call (unused by default).
         """
         if not looker:
             return ""
@@ -166,24 +178,57 @@ class Object(DefaultObject):
                    con.access(looker, "view"))
         exits, users, things = [], [], []
         for con in visible:
-            key = con.get_display_name(looker)
+            key = con.get_display_name(looker, pose=True)
             if con.destination:
                 exits.append(key)
             elif con.has_account:
-                users.append("|c%s|n" % key)
+                users.append(key)
             else:
                 things.append(key)
         # get description, build string
-        string = "|c%s|n\n" % self.get_display_name(looker)
+        string = "|c%s|n\n" % self.get_display_name(looker, pose=True)
         desc = self.desc
         if desc:
             string += "%s" % desc
         if exits:
             string += "\n|wExits:|n " + ", ".join(exits)
         if users or things:
-            string += "\n|wYou see:|n " + ", ".join(users + things)
+            string += "\n " + "\n ".join(users + things)
         return string
 
     @property
     def is_static(self):
         return True
+
+    def get_display_name(self, looker, **kwargs):
+        """
+        Displays the name of the object in a viewer-aware manner.
+
+        Args:
+            looker (TypedObject): The object or account that is looking
+                at/getting inforamtion for this object.
+
+        Kwargs:
+            pose (bool): Include the pose (if available) in the return.
+
+        Returns:
+            name (str): A string of the sdesc containing the name of the object,
+            if this is defined.
+                including the DBREF if this user is privileged to control
+                said object.
+
+        Notes:
+            The RPObject version doesn't add color to its display.
+
+        """
+        idstr = "(#%s)" % self.id if self.access(looker, access_type='control') else ""
+        if looker == self:
+            sdesc = self.key
+        else:
+            try:
+                recog = looker.recog.get(self)
+            except AttributeError:
+                recog = None
+            sdesc = recog or (hasattr(self, "sdesc") and self.sdesc.get()) or self.key
+        pose = " %s" % (self.db.pose or "") if kwargs.get("pose", False) else ""
+        return "%s%s%s" % (sdesc, idstr, pose)

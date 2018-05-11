@@ -28,7 +28,10 @@ class Command(BaseCommand):
             every command, like prompts.
 
     """
-    pass
+
+    def parse(self):
+        "strip extra whitespace"
+        self.args = self.args.strip()
 
 
 class ShowMap(Command):
@@ -60,6 +63,31 @@ class ShowMap(Command):
             s += "\n"
 
         self.caller.msg(s)
+
+
+class SetGender(Command):
+    """
+    Sets gender on yourself
+
+    Usage:
+      @gender male||female||neutral||ambiguous
+
+    """
+    key = "@gender"
+    alias = "@sex"
+    locks = "call:all()"
+
+    def func(self):
+        """
+        Implements the command.
+        """
+        caller = self.caller
+        arg = self.args.strip().lower()
+        if arg not in ("male", "female", "neutral", "ambiguous"):
+            caller.msg("Usage: @gender male||female||neutral||ambiguous")
+            return
+        caller.db.gender = arg
+        caller.msg("Your gender was set to %s." % arg)
 
 # -------------------------------------------------------------
 #

@@ -2,9 +2,9 @@
 import random
 
 from django.conf import settings
+
 from evennia import create_script, create_object
 from evennia.utils import lazy_property, logger
-
 from resources.terreni_desc import get_room_data
 from typeclasses.defaults.default_scripts import Script
 from utils.tg_handlers import TGHandlerDict
@@ -87,6 +87,7 @@ class TGMapEngine(Script):
         return TGMapEngineRoomHandler(self)
 
     def get_room(self, coordinates, default=None):
+        TGMapEngine.objects.all()[:1].get()
         return self._rooms.get(coordinates, default=default)
 
     def get_terrain_id(self, coordinates):

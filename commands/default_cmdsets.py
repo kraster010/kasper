@@ -14,6 +14,7 @@ own cmdsets by inheriting from them or directly from `evennia.CmdSet`.
 
 """
 from commands import command
+from commands.tg_social_cmdset import TGSocialSystemCmdSet
 from evennia import default_cmds
 
 
@@ -34,6 +35,7 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         # any commands you add below will overload the default ones.
         #
         self.add(command.ShowMap())
+        self.add(TGSocialSystemCmdSet())
 
 
 class AccountCmdSet(default_cmds.AccountCmdSet):

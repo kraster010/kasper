@@ -8,15 +8,204 @@ is setup to be the "default" character type created by the default
 creation commands.
 
 """
-from evennia.utils import logger
-
+from evennia import ansi
+from evennia.utils import logger, lazy_property
 from typeclasses.defaults.default_characters import Character
+from utils.tg_search_and_emote_regexes import *
+
+
+class RecogError(Exception):
+    pass
+
+
+class RecogHandler(object):
+    """
+    This handler manages the recognition mapping
+    of an Object.
+
+    The handler stores data in Attributes as dictionaries of
+    the following names:
+
+        _recog_ref2recog
+        _recog_obj2recog
+        _recog_obj2regex
+
+    """
+
+    def __init__(self, obj):
+        """
+        Initialize the handler
+
+        Args:
+            obj (Object): The entity on which this handler is stored.
+
+        """
+        self.obj = obj
+        # mappings
+        self.obj2recog = {}
+        self._cache()
+
+    def _cache(self):
+        """
+        Load data to handler cache
+        """
+        obj2recog = self.obj.attributes.get("_recog_obj2recog", default={})
+
+        self.obj2recog = dict((obj, recog)
+                              for obj, recog in obj2recog.items() if obj)
+
+    def add(self, obj, recog, max_length=60):
+        """
+        Assign a custom recog (nick) to the given object.
+
+        Args:
+            obj (Object): The object ot associate with the recog
+                string. This is usually determined from the sdesc in the
+                room by a call to parse_sdescs_and_recogs, but can also be
+                given.
+            recog (str): The replacement string to use with this object.
+            max_length (int, optional): The max length of the recog string.
+
+        Returns:
+            recog (str): The (possibly cleaned up) recog string actually set.
+
+        Raises:
+            SdescError: When recog could not be set or sdesc longer
+                than `max_length`.
+
+        """
+        if not obj.access(self.obj, "enable_recog", default=True):
+            raise RecogError("This person is unrecognizeable.")
+
+        # strip emote components from recog
+        recog = RE_REF.sub(
+            r"\1", RE_REF_LANG.sub(
+                r"\1", RE_SELF_REF.sub(
+                    r"", RE_LANGUAGE.sub(
+                        r"", RE_OBJ_REF_START.sub(r"", recog)))))
+
+        # make an recog clean of ANSI codes
+        cleaned_recog = ansi.strip_ansi(recog)
+
+        if not cleaned_recog:
+            raise RecogError("Recog string cannot be empty.")
+
+        if len(cleaned_recog) > max_length:
+            raise RecogError(
+                "Recog string cannot be longer than %i chars (was %i chars)" % (max_length, len(cleaned_recog)))
+
+        self.obj.attributes.get("_recog_obj2recog", default={})[obj] = recog
+        # local caching
+        self.obj2recog[obj] = recog
+        return recog
+
+    def get(self, obj, default=None):
+        """
+        Get recog replacement string, if one exists, otherwise
+        get sdesc and as a last resort, the object's key.
+
+        Args:
+            obj (Object): The object, whose sdesc to replace
+        Returns:
+            recog (str): The replacement string to use.
+
+        Notes:
+            This method will respect a "enable_recog" lock set on
+            `obj` (True by default) in order to turn off recog
+            mechanism. This is useful for adding masks/hoods etc.
+        """
+        if obj.access(self.obj, "enable_recog", default=True):
+            # check an eventual recog_masked lock on the object
+            # to avoid revealing masked characters. If lock
+            # does not exist, pass automatically.
+            if not default:
+                return self.obj2recog.get(obj, obj.sdesc.get() if hasattr(obj, "sdesc") else obj.key)
+            else:
+                return self.obj2recog.get(obj, default)
+        else:
+            # recog_mask log not passed, disable recog
+            if default:
+                return default
+            else:
+                return obj.sdesc.get() if hasattr(obj, "sdesc") else obj.key
+
+    def remove(self, obj):
+        """
+        Clear recog for a given object.
+
+        Args:
+            obj (Object): The object for which to remove recog.
+        """
+        if obj in self.obj2recog:
+            del self.obj.db._recog_obj2recog[obj]
+            del self.obj.db._recog_obj2regex[obj]
+        self._cache()
+
+    def get_regex_tuple(self, obj):
+        """
+        Returns:
+            rec (tuple): Tuple (recog_regex, obj, recog)
+        """
+        if obj in self.obj2recog and obj.access(self.obj, "enable_recog", default=True):
+            return self.obj2regex[obj], obj, self.obj2regex[obj]
+        return None
+
+
+class SdescHandler(object):
+    obj = None
+
+    def __init__(self, obj):
+        self.obj = obj
+        self.sdesc = ""
+        self._cache()
+
+    def _cache(self):
+        self.sdesc = self.obj.attributes.get("sdesc", "")
+
+    def add(self, sdesc, ):
+        self.obj.attributes.add("sdesc", sdesc)
+        self.sdesc = sdesc
+
+    def get(self):
+        return self.sdesc
 
 
 class TGCharacter(Character):
 
     def at_object_creation(self):
+        from world.races import apply_race
+        self.db.gender = "m"
+        apply_race(self, "Umani")
+
+        self.db.slots = {
+            'impugnatura1': None,
+            'impugnatura2': None,
+            'armatura': None,
+        }
+        self.db.limbs = (
+            ('r_arm', ('impugnatura1',)),
+            ('l_arm', ('impugnatura2',)),
+            ('corpo', ('armatura',)),
+        )
+
+        # defaults
+        self.db.altezza = 170
+        self.db.aggettivo = ""
+        self.db.pose = ""
+        self.db.pose_default = "è qui."
+
+        self.sdesc.add("un %s" % self.db.race_name.capitalize())
+
+        self.db._recog_obj2recog = {}
         self.coordinates = None
+
+    @lazy_property
+    def recog(self):
+        return RecogHandler(self)
+
+    @lazy_property
+    def sdesc(self):
+        return SdescHandler(self)
 
     @property
     def coordinates(self):
@@ -42,7 +231,6 @@ class TGCharacter(Character):
         Notes:
             If this method returns False/None, the move is cancelled
             before it is even started.
-
         """
 
         if not destination:
@@ -78,8 +266,6 @@ class TGCharacter(Character):
 
                 # mi sposto in last_valid_coordinates o in home se fallisco, altrimenti esplodo
                 if not map_handler.move_obj(self, self.db.last_valid_coordinates, quiet=True, move_hooks=False):
-                    if not self.home:
-                        raise RuntimeError
                     self.location = self.home
 
             else:
@@ -87,7 +273,8 @@ class TGCharacter(Character):
                 # giusto per ricordarmi la last_valid_area è già coerente non devo aggiornarla
                 self.location = self.db.prelogout_location if self.db.prelogout_location else self.home
 
-            self.location.at_object_receive(self, source_location=None)
+            if self.location:
+                self.location.at_object_receive(self, source_location=None)
 
         if self.location:
             # aggiorno tutto sapendo che self.location è pronta
@@ -134,3 +321,100 @@ class TGCharacter(Character):
                         self.db.last_valid_coordinates, self.db.last_valid_area, self.db.prelogout_location))
 
                 self.location = None
+
+    def get_display_name(self, looker, **kwargs):
+        """
+        Displays the name of the object in a viewer-aware manner.
+
+        Args:
+            looker (TypedObject): The object or account that is looking
+                at/getting inforamtion for this object.
+
+        Kwargs:
+            pose (bool): Include the pose (if available) in the return.
+
+        Returns:
+            name (str): A string of the sdesc containing the name of the object,
+            if this is defined.
+                including the DBREF if this user is privileged to control
+                said object.
+
+        Notes:
+            The RPCharacter version of this method colors its display to make
+            characters stand out from other objects.
+
+        """
+        idstr = "(#%s)" % self.id if self.access(looker, access_type='control') else ""
+        if looker == self:
+            sdesc = self.key
+        else:
+            try:
+                recog = looker.recog.get(self)
+            except AttributeError:
+                recog = None
+            sdesc = recog or self.sdesc.get()
+
+        pose = " %s" % (self.db.pose or "è qui.") if kwargs.get("pose", False) else ""
+
+        return "|c%s|n%s%s" % (sdesc, idstr, pose)
+
+    def process_sdesc(self, sdesc, obj, **kwargs):
+        """
+        Allows to customize how your sdesc is displayed (primarily by
+        changing colors).
+
+        Args:
+            sdesc (str): The sdesc to display.
+            obj (Object): The object to which the adjoining sdesc
+                belongs. If this object is equal to yourself, then
+                you are viewing yourself (and sdesc is your key).
+                This is not used by default.
+
+        Returns:
+            sdesc (str): The processed sdesc ready
+                for display.
+
+        """
+        return "%s" % sdesc
+
+    def process_recog(self, recog, obj, **kwargs):
+        """
+        Allows to customize how a recog string is displayed.
+
+        Args:
+            recog (str): The recog string. It has already been
+                translated from the original sdesc at this point.
+            obj (Object): The object the recog:ed string belongs to.
+                This is not used by default.
+
+        Returns:
+            recog (str): The modified recog string.
+
+        """
+        return self.process_sdesc(recog, obj)
+
+    def process_language(self, text, speaker, language, **kwargs):
+        """
+        Allows to process the spoken text, for example
+        by obfuscating language based on your and the
+        speaker's language skills. Also a good place to
+        put coloring.
+
+        Args:
+            text (str): The text to process.
+            speaker (Object): The object delivering the text.
+            language (str): An identifier string for the language.
+
+        Return:
+            text (str): The optionally processed text.
+
+        Notes:
+            This is designed to work together with a string obfuscator
+            such as the `obfuscate_language` or `obfuscate_whisper` in
+            the evennia.contrib.rplanguage module.
+
+        """
+        return "%s|w%s|n" % ("|W(%s)" % language if language else "", text)
+
+        # from evennia.contrib import rplanguage
+        # return "|w%s|n" % rplanguage.obfuscate_language(text, level=1.0)

@@ -15,19 +15,19 @@ does what you expect it to.
 
 """
 from django.conf import settings
+
 from evennia import search_object, ObjectDB
 from evennia.utils import create, logger
-
 from typeclasses.exits import TGStaticExit, TGDynamicExit
 from typeclasses.rooms import TGStaticRoom
 from world.mapengine.map_engine import TGMapEngineFactory
+from world.races import apply_race
 
 
 def set_playable_character(character, account):
     account.db.FIRST_LOGIN = True
     account.db._playable_characters.append(character)
     account.db._last_puppet = character
-
 
 def create_test_character(pg_name, home):
     logger.log_info("Creating test charachter {} with home {} ...".format(pg_name, home))
@@ -37,6 +37,7 @@ def create_test_character(pg_name, home):
                                         permissions=settings.PERMISSION_ACCOUNT_DEFAULT)
 
     new_character = create.create_object(settings.BASE_CHARACTER_TYPECLASS, key=new_account.key, home=home)
+    apply_race(new_character, "Umani")
 
     set_playable_character(new_character, new_account)
 
@@ -156,6 +157,7 @@ def at_initial_setup():
     god_character.db.prelogout_location = grotta_lunare
     god_character.db.last_valid_area = grotta_lunare_area
     god_character.db.last_valid_coordinates = grotta_lunare.coordinates
+    apply_race(god_character, "Umani")
 
     # creo due account di test con relativo pg
     t1_pg = create_test_character("hugo", grotta_lunare)
