@@ -87,7 +87,30 @@ START_LOCATION = "#2"
 
 INSTALLED_APPS = INSTALLED_APPS + ("world.mapengine",)
 
-print "http://localhost:4001/webclient/"
+
+WEBCLIENT_TEMPLATE = 'webclient'
+# We setup the location of the website template as well as the admin site.
+TEMPLATES = [{
+    'BACKEND': 'django.template.backends.django.DjangoTemplates',
+    'DIRS': [
+        os.path.join(GAME_DIR, "web", WEBCLIENT_TEMPLATE, "src"),
+        os.path.join(GAME_DIR, "web", WEBCLIENT_TEMPLATE)],
+    'APP_DIRS': True,
+    'OPTIONS': {
+        "context_processors": [
+            'django.template.context_processors.i18n',
+            'django.template.context_processors.request',
+            'django.contrib.auth.context_processors.auth',
+            'django.template.context_processors.media',
+            'django.template.context_processors.debug',
+            'sekizai.context_processors.sekizai',
+            'evennia.web.utils.general_context.general_context'],
+        # While true, show "pretty" error messages for template syntax errors.
+        "debug": DEBUG
+    }
+}]
+
+
 ######################################################################
 # Settings given in secret_settings.py override those in this file.
 ######################################################################

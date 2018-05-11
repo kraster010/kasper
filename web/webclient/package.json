@@ -1,0 +1,43 @@
+{
+	"dependencies": {
+		"autoprefixer": "^8.3.0",
+		"bootstrap": "^4.1.0",
+		"cssnano": "^3.10.0",
+		"gulp": "^4.0.0",
+		"jquery": "^3.3.1",
+		"socket.io": "^2.1.0"
+	},
+	"devDependencies": {
+		"babel-core": "^6.26.0",
+		"babel-loader": "^7.1.4",
+		"babel-preset-env": "^1.6.1",
+		"babel-preset-es2015": "^6.24.1",
+		"babel-register": "^6.26.0",
+		"chalk": "^2.4.0",
+		"gulp-cached": "^1.1.1",
+		"gulp-cli": "^2.0.1",
+		"gulp-debug": "4.0.0",
+		"gulp-jsbeautify": "^0.1.1",
+		"gulp-plumber": "^1.2.0",
+		"gulp-postcss": "^7.0.1",
+		"gulp-rename": "^1.2.2",
+		"gulp-sass": "^4.0.1",
+		"gulp-sass-unicode": "^1.0.1",
+		"gulp-sassbeautify": "^0.1.0",
+		"gulp-uglify": "^3.0.0",
+		"gulp4": "^4.0.2",
+		"html-loader": "^0.5.5",
+		"html-webpack-cdn-plugin": "^0.2.0",
+		"html-webpack-plugin": "^3.2.0",
+		"jsbeautify": "^0.3.6",
+		"webpack": "4.8.1",
+		"webpack-cli": "^2.0.14",
+		"webpack-dev-server": "^3.1.3",
+		"webpack-stream": "^4.0.3"
+	},
+	"author": "Andrea Lisi",
+	"license": "ISC",
+	"scripts": {
+		"build": "webpack"
+	}
+}

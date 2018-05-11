@@ -11,8 +11,11 @@ from evennia.web.urls import urlpatterns
 
 # eventual custom patterns
 custom_patterns = [
-    # url(r'/desired/url/', view, name='example'),
+    # webclient
+    url(r'^webclient/', include('web.webclient.urls', namespace='webclient', app_name='webclient')),
 ]
+
+
 
 # this is required by Django.
 urlpatterns = custom_patterns + urlpatterns
