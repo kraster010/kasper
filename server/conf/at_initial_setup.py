@@ -167,7 +167,7 @@ def at_initial_setup():
     t1_pg.db.last_valid_coordinates = grotta_lunare.coordinates
 
     t2_pg = create_test_character("sugo", grotta_lunare, "Elfi")
-    t2_pg.desc = "Un uomo sfoggia un grembiule bianco smanicato."
+    t2_pg.desc = "Alto pallido e a prima vista stupido."
     t2_pg.db.prelogout_location = grotta_lunare
     t2_pg.db.last_valid_area = grotta_lunare_area
     t2_pg.db.last_valid_coordinates = grotta_lunare.coordinates

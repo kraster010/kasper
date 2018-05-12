@@ -180,7 +180,7 @@ class Object(DefaultObject):
                    con.access(looker, "view"))
         exits, users, things = [], [], []
         for con in visible:
-            key = con.get_display_name(looker, pose=True)
+            key = con.get_display_name(looker, pose=True, capitalize=True)
             if con.destination:
                 exits.append(key)
             elif con.has_account:
@@ -188,7 +188,7 @@ class Object(DefaultObject):
             else:
                 things.append(key)
         # get description, build string
-        string = "|c%s|n\n" % self.get_display_name(looker, pose=True)
+        string = "|c%s|n\n" % self.get_display_name(looker, pose=True, capitalize=True)
         desc = self.desc
         if desc:
             string += "%s" % desc
@@ -361,20 +361,14 @@ class Object(DefaultObject):
                                                   use_dbref=use_dbref)
 
         if candidates:
-            candidates = parse_sdescs_and_recogs(self, candidates,
-                                                 PREFIX + searchdata, search_mode=True)
-            results = []
-            if candidates:
-                # we search by candidate keys here; this allows full error
-                # management and use of all kwargs - we will use searchdata
-                # in eventual error reporting later (not their keys). Doing
-                # it like this e.g. allows for use of the typeclass kwarg
-                # limiter.
-                results.append(candidates.key)
+            winner = parse_sdescs_and_recogs(self, candidates,
+                                             PREFIX + searchdata, search_mode=True)
 
-            if not results and is_builder:
+            if not winner and is_builder:
                 # builders get a chance to search only by key+alias
                 results = search_obj(searchdata)
+            else:
+                results = [winner]
         else:
             # global searches / #drefs end up here. Global searches are
             # only done in code, so is controlled, #dbrefs are turned off
@@ -383,5 +377,6 @@ class Object(DefaultObject):
 
         if quiet:
             return results
+
         return AT_SEARCH_RESULT(results, self, query=searchdata,
                                 nofound_string=nofound_string, multimatch_string=multimatch_string)

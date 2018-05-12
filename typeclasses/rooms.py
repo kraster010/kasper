@@ -5,10 +5,9 @@ Room
 Rooms are simple containers that has no location of their own.
 
 """
-from evennia.utils import lazy_property, inherits_from
+from evennia.utils import inherits_from
 
 from typeclasses.defaults.default_rooms import Room
-from utils.tg_handlers import TGDescriptionHandler
 
 
 class TGStaticRoom(Room):
@@ -25,20 +24,8 @@ class TGStaticRoom(Room):
     def coordinates(self, coordinates):
         self.db.coordinates = coordinates
 
-    @property
-    def desc(self):
-        return self.__description_handler.get()
-
-    @desc.setter
-    def desc(self, description):
-        self.__description_handler.add(description)
-
     def is_deletable(self, exclude=None):
         return False
-
-    @lazy_property
-    def __description_handler(self):
-        return TGDescriptionHandler(self)
 
 
 class TGDynamicRoom(Room):

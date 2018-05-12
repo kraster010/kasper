@@ -1,8 +1,9 @@
+# coding=utf-8
 from commands.command import Command
 from evennia import CmdSet
 from typeclasses.characters import RecogError
 from utils.tg_search_and_emote_regexes import *
-from world.rpsystem import send_emote, parse_sdescs_and_recogs
+from world.rpsystem import send_emote, parse_sdescs_and_recogs, EmoteError, LanguageError
 
 
 class CmdEmote(Command):  # replaces the main emote
@@ -38,10 +39,10 @@ class CmdEmote(Command):  # replaces the main emote
         """Perform the emote."""
         emote = self.emote
         if not emote:
-            self.caller.msg("What do you want to do?")
+            self.caller.msg("Cosa vuoi esprimere?")
         else:
             # we also include ourselves here.
-            targets = self.caller.location.contents
+            targets = self.caller.location.contents_get(exclude=self.caller) + [self.caller]
             if not emote.endswith((".", "?", "!")):  # If emote is not punctuated,
                 emote = "%s." % emote  # add a full-stop for good measure.
             send_emote(self.caller, targets, emote, anonymous_add='first')
@@ -90,73 +91,101 @@ class CmdSay(Command):  # replaces standard say
         if not spiega and speech[-1] not in ["?", "!", ".", ":"]:
             speech = "{}.".format(speech)
 
+        # call hook on location
         speech = caller.location.at_before_say(speech)
+
         # this is : and a space
         intermediary = ": "
         if self.espr:
             intermediary = " {espr}: ".format(espr=self.espr)
 
-        if not self.receiver:
-            # calling the speech hook on the location
-            # preparing the speech with sdesc/speech parsing.
-            speech_self = "{sp_dc}{intermediary}\'{speech}\'".format(speech=speech, intermediary=intermediary,
-                                                                     sp_dc="spieghi" if spiega else "dici")
+        # main "others" objs da cui prendere per le varaibili. è il  candidates di parse_sdesc
+        feed_obj_candidates = caller.location.contents_get(exclude=caller)
 
-            speech_all = " /me {sp_dc}{intermediary}\'{speech}\'".format(speech=speech, intermediary=intermediary,
-                                                                         sp_dc="spiega" if spiega else "dice")
+        try:
+            if not self.receiver:
+                speech_self = "{sp_dc}{intermediary}\'{speech}\'".format(speech=speech,
+                                                                         intermediary=intermediary,
+                                                                         sp_dc="spieghi" if spiega else "dici")
 
-            other_candidates = [x for x in caller.location.contents_get(exclude=caller)]
-            speech_all = send_emote(caller, other_candidates, speech_all, anonymous_add=None, return_emote=True)
-            speech_to_self = send_emote(caller, [caller], speech_self, anonymous_add=None, return_emote=True)[0]
-            seq = zip([caller] + other_candidates, [speech_to_self] + speech_all)
-        else:
-            prefixed_rec = PREFIX + self.receiver
-            receiver_obj = parse_sdescs_and_recogs(caller, caller.location.contents, prefixed_rec, search_mode=True)
+                speech_all = " /me {sp_dc}{intermediary}\'{speech}\'".format(speech=speech,
+                                                                             intermediary=intermediary,
+                                                                             sp_dc="spiega" if spiega else "dice")
 
-            if not receiver_obj:
-                caller.msg("A chi vuoi dirlo scusa?")
-                return
+                speech_to_self = send_emote(caller, [caller], speech_self, candidates=feed_obj_candidates,
+                                            anonymous_add=None, return_emote=True)[0]
 
-            temp = "spiega" if spiega else "dice"
+                speech_all = send_emote(caller, feed_obj_candidates, speech_all, candidates=feed_obj_candidates,
+                                        anonymous_add=None, return_emote=True)
 
-            if receiver_obj == caller:
-                speech_to_self = "{sp_dc} a te stesso{intermediary}\'{speech}\'".format(speech=speech,
-                                                                                        intermediary=intermediary,
-                                                                                        sp_dc="spieghi" if spiega else "dici")
-                speech_to_others = "/me {sp_dc} a se stesso{intermediary}\'{speech}\'".format(speech=speech,
-                                                                                              intermediary=intermediary,
-                                                                                              sp_dc=temp)
-                speech_to_self = send_emote(caller, [caller], speech_to_self, anonymous_add=None, return_emote=True)[0]
-                other_candidates = caller.location.contents_get(exclude=[caller, receiver_obj])
-                speech_to_others = send_emote(caller, other_candidates, speech_to_others, anonymous_add=None,
-                                              return_emote=True)
-                seq = zip([caller] + other_candidates, [speech_to_self] + speech_to_others)
+                seq = zip([caller] + feed_obj_candidates, [speech_to_self] + speech_all)
 
             else:
-                speech_to_self = "{sp_dc} a {receiver}{intermediary}\'{speech}\'".format(speech=speech,
-                                                                                         intermediary=intermediary,
-                                                                                         receiver=prefixed_rec,
-                                                                                         sp_dc="spieghi" if spiega else "dici")
+                prefixed_rec = PREFIX + self.receiver
 
-                speech_to_rec = "/me ti {sp_dc}{intermediary}\'{speech}\'".format(speech=speech,
-                                                                                  intermediary=intermediary,
-                                                                                  sp_dc=temp)
-                speech_to_others = "/me {sp_dc} a {receiver}{intermediary}\'{speech}\'".format(speech=speech,
-                                                                                               intermediary=intermediary,
-                                                                                               receiver=prefixed_rec,
-                                                                                               sp_dc=temp)
+                receiver_obj = parse_sdescs_and_recogs(caller, feed_obj_candidates + [caller], prefixed_rec,
+                                                       search_mode=True)
 
-                speech_to_self = send_emote(caller, [caller], speech_to_self, anonymous_add=None, return_emote=True)[0]
-                speech_to_rec = \
-                    send_emote(caller, [receiver_obj], speech_to_rec, anonymous_add=None, return_emote=True)[0]
-                other_candidates = caller.location.contents_get(exclude=[caller, receiver_obj])
-                speech_to_others = send_emote(caller, other_candidates, speech_to_others, anonymous_add=None,
-                                              return_emote=True)
-                seq = zip([caller, receiver_obj] + other_candidates,
-                          [speech_to_self, speech_to_rec] + speech_to_others)
+                if not receiver_obj:
+                    caller.msg("A chi vuoi dirlo scusa?")
+                    return
+
+                temp = "spiega" if spiega else "dice"
+
+                if receiver_obj != caller:
+                    speech_to_self = "{sp_dc} a {receiver}{intermediary}\'{speech}\'".format(speech=speech,
+                                                                                             intermediary=intermediary,
+                                                                                             receiver=prefixed_rec,
+                                                                                             sp_dc="spieghi" if spiega else "dici")
+
+                    speech_to_rec = "/me ti {sp_dc}{intermediary}\'{speech}\'".format(speech=speech,
+                                                                                      intermediary=intermediary,
+                                                                                      sp_dc=temp)
+                    speech_to_others = "/me {sp_dc} a {receiver}{intermediary}\'{speech}\'".format(speech=speech,
+                                                                                                   intermediary=intermediary,
+                                                                                                   receiver=prefixed_rec,
+                                                                                                   sp_dc=temp)
+                    speech_to_self = send_emote(caller, [caller], speech_to_self,
+                                                candidates=feed_obj_candidates, anonymous_add=None,
+                                                return_emote=True)[0]
+
+                    speech_to_rec = send_emote(caller, [receiver_obj], speech_to_rec,
+                                               candidates=feed_obj_candidates, anonymous_add=None,
+                                               return_emote=True)[0]
+
+                    other_listener = [x for x in feed_obj_candidates if
+                                      x != receiver_obj]  # quindi senza caller e receiver_obj
+
+                    speech_to_others = send_emote(caller, other_listener, speech_to_others,
+                                                  candidates=feed_obj_candidates, anonymous_add=None,
+                                                  return_emote=True)
+
+                    seq = zip([caller, receiver_obj] + other_listener,
+                              [speech_to_self, speech_to_rec] + speech_to_others)
+
+                else:
+                    speech_to_self = "{sp_dc} a te stesso{intermediary}\'{speech}\'".format(speech=speech,
+                                                                                            intermediary=intermediary,
+                                                                                            sp_dc="spieghi" if spiega else "dici")
+                    speech_to_others = "/me {sp_dc} a se stesso{intermediary}\'{speech}\'".format(speech=speech,
+                                                                                                  intermediary=intermediary,
+                                                                                                  sp_dc=temp)
+                    speech_to_self = send_emote(caller, [caller], speech_to_self,
+                                                candidates=feed_obj_candidates, anonymous_add=None,
+                                                return_emote=True)[0]
+
+                    speech_to_others = send_emote(caller, feed_obj_candidates, speech_to_others,
+                                                  candidates=feed_obj_candidates, anonymous_add=None,
+                                                  return_emote=True)
+
+                    seq = zip([caller] + feed_obj_candidates, [speech_to_self] + speech_to_others)
+
+        except (EmoteError, LanguageError) as err:
+            caller.msg("%s" % err)
+            return
 
         for rec, txt in seq:
-            rec.msg(txt.capitalize().strip())
+            rec.msg(txt.strip().capitalize())
 
 
 class CmdPose(Command):  # set current pose and default pose
@@ -164,17 +193,17 @@ class CmdPose(Command):  # set current pose and default pose
     Set a static pose
 
     Usage:
-        pose <pose>
-        pose default <pose>
-        pose reset
-        pose obj = <pose>
-        pose default obj = <pose>
-        pose reset obj =
+        | <pose>
+        | default <pose>
+        | reset
+        | obj = <pose>
+        | default obj = <pose>
+        | reset obj =
 
     Examples:
-        pose leans against the tree
-        pose is talking to the barkeep.
-        pose box = is sitting on the floor.
+        | appggiato spalle ad un albero è qui
+        | is talking to the barkeep.
+        | box = is sitting on the floor.
 
     Set a static pose. This is the end of a full sentence that starts
     with your sdesc. If no full stop is given, it will be added
@@ -209,12 +238,12 @@ class CmdPose(Command):  # set current pose and default pose
         self.args = args.strip()
 
     def func(self):
-        "Create the pose"
+        """Create the pose"""
         caller = self.caller
         pose = self.args
         target = self.target
         if not pose and not self.reset:
-            caller.msg("Usage: pose <pose-text> OR pose obj = <pose-text>")
+            caller.msg("Usage: | <pose-text> OR | obj = <pose-text>")
             return
 
         if not pose.endswith("."):
@@ -231,7 +260,7 @@ class CmdPose(Command):  # set current pose and default pose
             target = caller
 
         if not target.attributes.has("pose"):
-            caller.msg("%s cannot be posed." % target.key)
+            caller.msg("Non puoi su %s." % target.key)
             return
 
         target_name = target.sdesc.get() if hasattr(target, "sdesc") else target.key
@@ -241,7 +270,7 @@ class CmdPose(Command):  # set current pose and default pose
             target.db.pose = pose
         elif self.default:
             target.db.pose_default = pose
-            caller.msg("Default pose is now '%s %s'." % (target_name, pose))
+            caller.msg("La posa ora è: '%s %s'." % (target_name, pose))
             return
         else:
             # set the pose. We do one-time ref->sdesc mapping here.
@@ -251,12 +280,12 @@ class CmdPose(Command):  # set current pose and default pose
             pose = parsed.format(**mapping)
 
             if len(target_name) + len(pose) > 60:
-                caller.msg("Your pose '%s' is too long." % pose)
+                caller.msg("Posa '%s' troppo lunga." % pose)
                 return
 
             target.db.pose = pose
 
-        caller.msg("Pose will read '%s %s'." % (target_name, pose))
+        caller.msg("Gli altri leggeranno '%s %s'." % (target_name, pose))
 
 
 class CmdRecog(Command):  # assign personal alias to object in room
@@ -268,66 +297,60 @@ class CmdRecog(Command):  # assign personal alias to object in room
       forget alias
 
     Example:
-        recog tall man as Griatch
-        forget griatch
+        recog <qualcuno> <come>
+        forget <qualcuno>
 
     This will assign a personal alias for a person, or
     forget said alias.
 
     """
-    key = "recog"
-    aliases = ["recognize", "forget"]
+    key = "ricorda"
+    aliases = ["dimentica"]
 
     def parse(self):
-        "Parse for the sdesc as alias structure"
-        if " as " in self.args:
-            self.sdesc, self.alias = [part.strip() for part in self.args.split(" as ", 2)]
-        elif self.args:
-            # try to split by space instead
-            try:
-                self.sdesc, self.alias = [part.strip() for part in self.args.split(None, 1)]
-            except ValueError:
-                self.sdesc, self.alias = self.args.strip(), ""
+        """Parse for the sdesc as alias structure"""
+
+        self.args = self.args.strip()
+        temp = self.args.split(" ")
+        if len(temp) >= 2:
+            self.chi, self.come = temp[:2]
+        else:
+            self.chi, self.come = self.args, ""
 
     def func(self):
-        "Assign the recog"
+        """Assign the recog"""
         caller = self.caller
-        if not self.args:
-            caller.msg("Usage: recog <sdesc> as <alias> or forget <alias>")
+        if not self.args or (self.cmdstring == "ricorda" and not self.come):
+            caller.msg("Usage: ricorda <pg> <alias> oppure dimentica <alias>")
             return
-        sdesc = self.sdesc
-        alias = self.alias.rstrip(".?!")
-        prefixed_sdesc = sdesc if sdesc.startswith(PREFIX) else PREFIX + sdesc
-        candidates = caller.location.contents
-        matches = parse_sdescs_and_recogs(caller, candidates, prefixed_sdesc, search_mode=True)
-        nmatches = len(matches)
+
+        target = self.chi
+        prefixed_sdesc = target if target.startswith(PREFIX) else PREFIX + target
+        candidates = caller.location.contents_get(exclude=caller)
+        obj = parse_sdescs_and_recogs(caller, candidates, prefixed_sdesc, search_mode=True)
         # handle 0, 1 and >1 matches
-        if nmatches == 0:
-            caller.msg(EMOTE_NOMATCH_ERROR.format(ref=sdesc))
-        elif nmatches > 1:
-            reflist = ["%s%s%s (%s%s)" % (inum + 1, NUM_SEP,
-                                          RE_PREFIX.sub("", sdesc), caller.recog.get(obj),
-                                          " (%s)" % caller.key if caller == obj else "")
-                       for inum, obj in enumerate(matches)]
-            caller.msg(EMOTE_MULTIMATCH_ERROR.format(ref=sdesc, reflist="\n    ".join(reflist)))
+        if not obj:
+            caller.msg("Non ti ricordi di nessuno come %s" % target)
         else:
-            obj = matches[0]
             if not obj.access(self.obj, "enable_recog", default=True):
                 # don't apply recog if object doesn't allow it (e.g. by being masked).
-                caller.msg("Can't recognize someone who is masked.")
+                caller.msg("è un viso tropp comune...")
                 return
-            if self.cmdstring == "forget":
+            if self.cmdstring == "dimentica":
                 # remove existing recog
-                caller.recog.remove(obj)
-                caller.msg("%s will now know only '%s'." % (caller.key, obj.recog.get(obj)))
+                if caller.recog.remove(obj):
+                    caller.msg("Ti dimentichi di %s" % self.chi)
+                else:
+                    caller.msg("Non ti ricordi di %s" % self.chi)
             else:
                 sdesc = obj.sdesc.get() if hasattr(obj, "sdesc") else obj.key
                 try:
+                    alias = self.come.rstrip(".?!")
                     alias = caller.recog.add(obj, alias)
                 except RecogError as err:
                     caller.msg(err)
                     return
-                caller.msg("%s will now remember |w%s|n as |w%s|n." % (caller.key, sdesc, alias))
+                caller.msg("Ti ricorderai di |w%s|n come |w%s|n." % (sdesc, alias))
 
 
 class CmdMask(Command):

@@ -94,7 +94,7 @@ Verbose Installation Instructions:
            @type/reset/force me = typeclasses.characters.Character
 
 """
-from evennia.utils import string_partial_matching, logger
+from evennia.utils import string_partial_matching
 from utils.tg_search_and_emote_regexes import *
 
 
@@ -306,7 +306,7 @@ def parse_sdescs_and_recogs(sender, candidates, string, search_mode=False):
     return string, mapping
 
 
-def send_emote(sender, receivers, emote, anonymous_add="first", return_emote=False):
+def send_emote(sender, receivers, emote, candidates=None, anonymous_add="first", return_emote=False):
     """
     Main access function for distribute an emote.
 
@@ -324,14 +324,11 @@ def send_emote(sender, receivers, emote, anonymous_add="first", return_emote=Fal
             - 'first': Prepend sender to start of emote.
 
     """
-    try:
-        candidates = sender.location.contents_get(exclude=sender)
-        emote, obj_mapping = parse_sdescs_and_recogs(sender, candidates, emote)
-        emote, language_mapping = parse_language(sender, emote)
-    except (EmoteError, LanguageError) as err:
-        # handle all error messages, don't hide actual coding errors
-        sender.msg(err.message)
-        return
+    if not candidates:
+        candidates = receivers  # questo era la  classica chiamata
+
+    emote, obj_mapping = parse_sdescs_and_recogs(sender, candidates, emote)
+    emote, language_mapping = parse_language(sender, emote)
     # we escape the object mappings since we'll do the language ones first
     # (the text could have nested object mappings).
     emote = RE_REF.sub(r"{{#\1}}", emote)
@@ -387,7 +384,6 @@ def send_emote(sender, receivers, emote, anonymous_add="first", return_emote=Fal
 
         # do the template replacement of the sdesc/recog {#num} markers
         temp = sendemote.format(**receiver_sdesc_mapping)
-        logger.log_info(temp)
         if return_emote:
             ret.append(temp)
         else:

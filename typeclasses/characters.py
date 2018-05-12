@@ -136,19 +136,12 @@ class RecogHandler(object):
         Args:
             obj (Object): The object for which to remove recog.
         """
+        ret_flag = False
         if obj in self.obj2recog:
             del self.obj.db._recog_obj2recog[obj]
-            del self.obj.db._recog_obj2regex[obj]
+            ret_flag = True
         self._cache()
-
-    def get_regex_tuple(self, obj):
-        """
-        Returns:
-            rec (tuple): Tuple (recog_regex, obj, recog)
-        """
-        if obj in self.obj2recog and obj.access(self.obj, "enable_recog", default=True):
-            return self.obj2regex[obj], obj, self.obj2regex[obj]
-        return None
+        return ret_flag
 
 
 class SdescHandler(object):
@@ -352,7 +345,7 @@ class TGCharacter(Character):
 
         pose = " %s" % (self.db.pose or "è qui.") if kwargs.get("pose", False) else ""
 
-        return "|c%s|n%s%s" % (sdesc, idstr, pose)
+        return "|c%s|n%s%s" % (sdesc.capitalize() if kwargs.get("capitalize", False) else sdesc, idstr, pose)
 
     def process_sdesc(self, sdesc, obj, **kwargs):
         """
@@ -414,3 +407,36 @@ class TGCharacter(Character):
 
         # from evennia.contrib import rplanguage
         # return "|w%s|n" % rplanguage.obfuscate_language(text, level=1.0)
+
+    def return_appearance(self, looker):
+        """
+        This formats a description. It is the hook a 'look' command
+        should call.
+
+        Args:
+            looker (Object): Object doing the looking.
+        """
+        if not looker:
+            return ""
+        # get and identify all objects
+        visible = (con for con in self.contents if con != looker and
+                   con.access(looker, "view"))
+        exits, users, things = [], [], []
+        for con in visible:
+            key = con.get_display_name(looker, pose=True, capitalize=True)
+            if con.destination:
+                exits.append(key)
+            elif con.has_account:
+                users.append(key)
+            else:
+                things.append(key)
+        # get description, build string
+        string = "|c%s|n\n" % self.get_display_name(looker, pose=False, capitalize=True)
+        desc = self.desc
+        if desc:
+            string += "%s" % desc
+        if exits:
+            string += "\n|wExits:|n " + ", ".join(exits)
+        if users or things:
+            string += "\n " + "\n ".join(users + things)
+        return string
