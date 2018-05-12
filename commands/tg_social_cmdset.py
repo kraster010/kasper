@@ -1,5 +1,5 @@
 from commands.command import Command
-from evennia import CmdSet, logger
+from evennia import CmdSet
 from typeclasses.characters import RecogError
 from utils.tg_search_and_emote_regexes import *
 from world.rpsystem import send_emote, parse_sdescs_and_recogs
@@ -14,9 +14,9 @@ class CmdEmote(Command):  # replaces the main emote
       emote text
 
     Example:
-      emote /me looks around.
-      emote With a flurry /me attacks /tall man with his sword.
-      emote "Hello", /me says.
+      espr /me looks around.
+      espr With a flurry /me attacks /tall man with his sword.
+      espr "Hello", /me says.
 
     Describes an event in the world. This allows the use of /ref
     markers to replace with the short descriptions or recognized
@@ -26,17 +26,21 @@ class CmdEmote(Command):  # replaces the main emote
     a different language.
 
     """
-    key = "emote"
+    key = "espr"
     aliases = [":"]
     locks = "cmd:all()"
 
+    def parse(self):
+        self.args = self.args.strip()
+        self.emote = self.args
+
     def func(self):
-        "Perform the emote."
-        if not self.args:
+        """Perform the emote."""
+        emote = self.emote
+        if not emote:
             self.caller.msg("What do you want to do?")
         else:
             # we also include ourselves here.
-            emote = self.args
             targets = self.caller.location.contents
             if not emote.endswith((".", "?", "!")):  # If emote is not punctuated,
                 emote = "%s." % emote  # add a full-stop for good measure.
@@ -95,14 +99,16 @@ class CmdSay(Command):  # replaces standard say
         if not self.receiver:
             # calling the speech hook on the location
             # preparing the speech with sdesc/speech parsing.
-            speech_all = " /me {sp_dc}{intermediary}\'{speech}\'".format(speech=speech, intermediary=intermediary,
-                                                                         sp_dc="spiega" if spiega else "dice")
-
             speech_self = "{sp_dc}{intermediary}\'{speech}\'".format(speech=speech, intermediary=intermediary,
                                                                      sp_dc="spieghi" if spiega else "dici")
 
-            send_emote(caller, caller.location.contents_get(exclude=caller), speech_all, anonymous_add=None)
-            send_emote(caller, [caller], speech_self, anonymous_add=None)
+            speech_all = " /me {sp_dc}{intermediary}\'{speech}\'".format(speech=speech, intermediary=intermediary,
+                                                                         sp_dc="spiega" if spiega else "dice")
+
+            other_candidates = [x for x in caller.location.contents_get(exclude=caller)]
+            speech_all = send_emote(caller, other_candidates, speech_all, anonymous_add=None, return_emote=True)
+            speech_to_self = send_emote(caller, [caller], speech_self, anonymous_add=None, return_emote=True)[0]
+            seq = zip([caller] + other_candidates, [speech_to_self] + speech_all)
         else:
             prefixed_rec = PREFIX + self.receiver
             receiver_obj = parse_sdescs_and_recogs(caller, caller.location.contents, prefixed_rec, search_mode=True)
@@ -118,40 +124,39 @@ class CmdSay(Command):  # replaces standard say
                                                                                         intermediary=intermediary,
                                                                                         sp_dc="spieghi" if spiega else "dici")
                 speech_to_others = "/me {sp_dc} a se stesso{intermediary}\'{speech}\'".format(speech=speech,
-                                                                                             intermediary=intermediary,
-                                                                                             sp_dc=temp)
+                                                                                              intermediary=intermediary,
+                                                                                              sp_dc=temp)
                 speech_to_self = send_emote(caller, [caller], speech_to_self, anonymous_add=None, return_emote=True)[0]
-                other_candidates = [x for x in caller.location.contents if x not in [caller, receiver_obj]]
+                other_candidates = caller.location.contents_get(exclude=[caller, receiver_obj])
                 speech_to_others = send_emote(caller, other_candidates, speech_to_others, anonymous_add=None,
                                               return_emote=True)
-                for rec, txt in zip([caller] + other_candidates,
-                                    [speech_to_self] + speech_to_others):
-                    rec.msg(txt)
-                    logger.log_info(txt)
+                seq = zip([caller] + other_candidates, [speech_to_self] + speech_to_others)
+
             else:
-                speech_to_rec = "/me ti {sp_dc}{intermediary}\'{speech}\'".format(speech=speech, intermediary=intermediary,
-                                                                                  sp_dc=temp)
-                speech_to_others = "/me {sp_dc} a {receiver}{intermediary}\'{speech}\'".format(speech=speech,
-                                                                                               intermediary=intermediary,
-                                                                                               receiver=prefixed_rec,
-                                                                                               sp_dc=temp)
                 speech_to_self = "{sp_dc} a {receiver}{intermediary}\'{speech}\'".format(speech=speech,
                                                                                          intermediary=intermediary,
                                                                                          receiver=prefixed_rec,
                                                                                          sp_dc="spieghi" if spiega else "dici")
 
-                # prepare speeches instead of sending them one by one we prepare and send all togheter
+                speech_to_rec = "/me ti {sp_dc}{intermediary}\'{speech}\'".format(speech=speech,
+                                                                                  intermediary=intermediary,
+                                                                                  sp_dc=temp)
+                speech_to_others = "/me {sp_dc} a {receiver}{intermediary}\'{speech}\'".format(speech=speech,
+                                                                                               intermediary=intermediary,
+                                                                                               receiver=prefixed_rec,
+                                                                                               sp_dc=temp)
+
                 speech_to_self = send_emote(caller, [caller], speech_to_self, anonymous_add=None, return_emote=True)[0]
-                speech_to_rec = send_emote(caller, [receiver_obj], speech_to_rec, anonymous_add=None, return_emote=True)[0]
-                other_candidates = [x for x in caller.location.contents if x not in [caller, receiver_obj]]
+                speech_to_rec = \
+                    send_emote(caller, [receiver_obj], speech_to_rec, anonymous_add=None, return_emote=True)[0]
+                other_candidates = caller.location.contents_get(exclude=[caller, receiver_obj])
                 speech_to_others = send_emote(caller, other_candidates, speech_to_others, anonymous_add=None,
                                               return_emote=True)
+                seq = zip([caller, receiver_obj] + other_candidates,
+                          [speech_to_self, speech_to_rec] + speech_to_others)
 
-                for rec, txt in zip([caller, receiver_obj] + other_candidates,
-                                    [speech_to_self, speech_to_rec] + speech_to_others):
-                    rec.msg(txt)
-                    logger.log_info(txt)
-
+        for rec, txt in seq:
+            rec.msg(txt.capitalize().strip())
 
 
 class CmdPose(Command):  # set current pose and default pose
@@ -179,7 +184,9 @@ class CmdPose(Command):  # set current pose and default pose
     sdesc in the emote, regardless of who is seeing it.
 
     """
-    key = "pose"
+    key = "|"
+    aliases = []
+    locks = "cmd:all()"
 
     def parse(self):
         """

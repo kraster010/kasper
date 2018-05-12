@@ -94,7 +94,9 @@ class Race(object):
         obj.db.slots = self.slots
         obj.db.limbs = self.limbs
         obj.db.race = self.name
-        obj.db.race_name = self.race_oa(gender=obj.db.gender)
+        temp = self.race_oa(gender=obj.db.gender)
+        obj.db.race_name = temp
+        obj.sdesc.add("un %s" % temp.capitalize())
 
     def race_oa(self, gender="m", type="s"):
         return self.femminile[type] if gender == "f" else self.maschile[type]
@@ -120,4 +122,3 @@ class Elfi(Race):
         self.maschile = dict(s="elfo", p="elfi")
         self.femminile = dict(s="elfa", p="elfe")
         self.altezza = dict(m=170, f=170)
-

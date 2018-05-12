@@ -242,28 +242,15 @@ def parse_sdescs_and_recogs(sender, candidates, string, search_mode=False):
         # first see if there is a number given (e.g. 1-tall)
         num_identifier, obj_str = marker_match.groups("")  # return "" if no match, rather than None
 
-        if int(num_identifier) == 0:
-            num_identifier = ""
-
         if RE_SELF_REF.match(PREFIX + obj_str):
             bestmatches = [sender]
         else:
             bestmatches = [x for x in candidates if string_partial_matching([sender.recog.get(x, "")], obj_str)]
             if not bestmatches:
-                bestmatches = [x for x in candidates if string_partial_matching([x.sdesc.get()], obj_str)]
+                bestmatches = [x for x in candidates if
+                               string_partial_matching([x.sdesc.get() if hasattr(x, "sdesc") else x.key], obj_str)]
 
         nmatches = len(bestmatches)
-        #
-        # # loop over all candidate regexes and match against the string following the match
-        # matches = ((reg.match(string[istart:]), obj, text) for reg, obj, text in candidate_regexes)
-        #
-        # # score matches by how long part of the string was matched
-        # matches = [(match.end() if match else -1, obj, text) for match, obj, text in matches]
-        # maxscore = max(score for score, obj, text in matches)
-        #
-        # # we have a valid maxscore, extract all matches with this value
-        # bestmatches = [(obj, text) for score, obj, text in matches if maxscore == score != -1]
-        # nmatches = len(bestmatches)
 
         if not nmatches:
             # no matches
@@ -300,8 +287,7 @@ def parse_sdescs_and_recogs(sender, candidates, string, search_mode=False):
         else:
             # allora nmatches == 1
             key = "#%i" % obj.id
-            istart0 = marker_match.start()
-            string = string[:istart0] + "{%s}" % key + string[istart0 + 1 + len(obj_str):]
+            string = string[:marker_match.start()] + "{%s}" % key + string[marker_match.end():]
             mapping[key] = obj
 
     if search_mode:

@@ -29,7 +29,7 @@ def set_playable_character(character, account):
     account.db._playable_characters.append(character)
     account.db._last_puppet = character
 
-def create_test_character(pg_name, home):
+def create_test_character(pg_name, home, race):
     logger.log_info("Creating test charachter {} with home {} ...".format(pg_name, home))
 
     new_account = create.create_account(pg_name, email="test%s@test.com" % pg_name, password="1234",
@@ -37,7 +37,7 @@ def create_test_character(pg_name, home):
                                         permissions=settings.PERMISSION_ACCOUNT_DEFAULT)
 
     new_character = create.create_object(settings.BASE_CHARACTER_TYPECLASS, key=new_account.key, home=home)
-    apply_race(new_character, "Umani")
+    apply_race(new_character, race)
 
     set_playable_character(new_character, new_account)
 
@@ -160,13 +160,13 @@ def at_initial_setup():
     apply_race(god_character, "Umani")
 
     # creo due account di test con relativo pg
-    t1_pg = create_test_character("hugo", grotta_lunare)
+    t1_pg = create_test_character("hugo", grotta_lunare,  "Umani")
     t1_pg.desc = "Un vecchio lupo di mare con qualche dente in meno."
     t1_pg.db.prelogout_location = grotta_lunare
     t1_pg.db.last_valid_area = grotta_lunare_area
     t1_pg.db.last_valid_coordinates = grotta_lunare.coordinates
 
-    t2_pg = create_test_character("sugo", grotta_lunare)
+    t2_pg = create_test_character("sugo", grotta_lunare, "Elfi")
     t2_pg.desc = "Un uomo sfoggia un grembiule bianco smanicato."
     t2_pg.db.prelogout_location = grotta_lunare
     t2_pg.db.last_valid_area = grotta_lunare_area

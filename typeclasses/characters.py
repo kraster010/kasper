@@ -173,9 +173,7 @@ class SdescHandler(object):
 class TGCharacter(Character):
 
     def at_object_creation(self):
-        from world.races import apply_race
         self.db.gender = "m"
-        apply_race(self, "Umani")
 
         self.db.slots = {
             'impugnatura1': None,
@@ -193,8 +191,6 @@ class TGCharacter(Character):
         self.db.aggettivo = ""
         self.db.pose = ""
         self.db.pose_default = "è qui."
-
-        self.sdesc.add("un %s" % self.db.race_name.capitalize())
 
         self.db._recog_obj2recog = {}
         self.coordinates = None
