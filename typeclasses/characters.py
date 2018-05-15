@@ -12,6 +12,7 @@ from evennia import ansi
 from evennia.utils import logger, lazy_property
 from typeclasses.defaults.default_characters import Character
 from utils.tg_search_and_emote_regexes import *
+from world.traits_handler import TraitHandler
 
 
 class RecogError(Exception):
@@ -187,6 +188,10 @@ class TGCharacter(Character):
 
         self.db._recog_obj2recog = {}
         self.coordinates = None
+
+    @lazy_property
+    def traits(self):
+        return TraitHandler(self)
 
     @lazy_property
     def recog(self):
