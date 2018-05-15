@@ -40,9 +40,13 @@ const paths = {
 	
 var portal = "webclient"; //default
 	//seting different portal building via --portal arg (website, admin etc)
-	if (argv.portal == 'webclient') {
-	portal = argv.portal
-}
+if (argv.live) {
+	paths[portal].out.base = "../static/webclient/";
+};
+
+if (argv.portal == 'webclient') {
+portal = argv.portal
+};
 
 let P = paths[portal]; // just short var
 

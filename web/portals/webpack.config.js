@@ -26,7 +26,7 @@ module.exports = function(portal = "webclient", config) {
         },
     
         output: {
-            path: path.resolve(__dirname, '../build/' + portal + '/js/'),
+            path: path.resolve(__dirname, '../static/' + portal + '/js/'),
             filename: '[name].min.js', //TODO only on build
             // filename: '[name]-[hash].min.js',
             libraryTarget: 'umd',

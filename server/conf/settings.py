@@ -90,7 +90,7 @@ START_LOCATION = "#2"
 MEDIA_URL = '/media/'
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(GAME_DIR, "web", "build")
+STATIC_ROOT = os.path.join(GAME_DIR, "web", "static")
 
 
 # WEBSITE_TEMPLATE = 'website'
