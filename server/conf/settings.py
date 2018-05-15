@@ -88,13 +88,35 @@ START_LOCATION = "#2"
 INSTALLED_APPS = INSTALLED_APPS + ("world.mapengine",)
 
 
+STATIC_URL = '/assets/'
+STATIC_ROOT = os.path.join(GAME_DIR, "web", "build")
+
+# WEBSITE_TEMPLATE = 'website'
 WEBCLIENT_TEMPLATE = 'webclient'
+
+
+STATICFILES_DIRS = (
+    os.path.join(GAME_DIR, "web", "portals", "webclient", "out"),)
+
+
+
+
+# The default options used by the webclient
+WEBCLIENT_OPTIONS = {
+    "gagprompt": True,  # Gags prompt from the output window and keep them
+    # together with the input bar
+    "helppopup": True,  # Shows help files in a new popup window
+    "notification_popup": False,  # Shows notifications of new messages as
+    # popup windows
+    "notification_sound": False   # Plays a sound for notifications of new
+    # messages
+}
+
 # We setup the location of the website template as well as the admin site.
 TEMPLATES = [{
     'BACKEND': 'django.template.backends.django.DjangoTemplates',
     'DIRS': [
-        os.path.join(GAME_DIR, "web", WEBCLIENT_TEMPLATE, "src"),
-        os.path.join(GAME_DIR, "web", WEBCLIENT_TEMPLATE)],
+        os.path.join(GAME_DIR, "web", "portals", WEBCLIENT_TEMPLATE, "src", "pages")],
     'APP_DIRS': True,
     'OPTIONS': {
         "context_processors": [
@@ -109,6 +131,7 @@ TEMPLATES = [{
         "debug": DEBUG
     }
 }]
+
 
 
 ######################################################################

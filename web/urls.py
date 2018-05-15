@@ -12,10 +12,10 @@ from evennia.web.urls import urlpatterns
 # eventual custom patterns
 custom_patterns = [
     # webclient
-    url(r'^webclient/', include('web.webclient.urls', namespace='webclient', app_name='webclient')),
+    url(r'^play', include('web.portals.webclient.urls', namespace='webclient', app_name='webclient')),
 ]
 
 
 
 # this is required by Django.
-urlpatterns = custom_patterns + urlpatterns
+urlpatterns = custom_patterns
