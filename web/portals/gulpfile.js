@@ -31,7 +31,7 @@ const paths = {
 			js: "js/"
 		},
 		out : {
-			base: "./webclient/out/",
+			base: "./out/webclient/",
 			js: "js/",
 			css: "css/"
 		}

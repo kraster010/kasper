@@ -7,7 +7,7 @@ help.
 from django.conf.urls import url, include
 
 # default evennia patterns
-from evennia.web.urls import urlpatterns
+# from evennia.web.urls import urlpatterns
 
 # eventual custom patterns
 custom_patterns = [

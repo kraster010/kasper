@@ -1,6 +1,6 @@
 <!DOCTYPE HTML>
 
-<{% load staticfiles %}
+{% load staticfiles %}
 <html dir="ltr" lang="en">
   <head>
     <title> {{game_name}} </title>
@@ -8,7 +8,7 @@
     <meta name="author" content="{{game_name}}" />
     <meta name="generator" content="{{game_name}}" />
 
-    <link rel='stylesheet' type="text/css" media="screen" href={% static "webclient/css/webclient.css" %}>
+    <link rel='stylesheet' type="text/css" media="screen" href={% static "webclient/css/tgclient.css" %}>
 
     <!-- Import JQuery and warn if there is a problem -->
     {% block jquery_import %}
@@ -38,12 +38,7 @@
             var wsurl = "ws://" + this.location.hostname + ":{{websocket_port}}";
         {% endif %}
     </script>
-    <!-- <script src={% static "webclient/js/evennia.js" %} language="javascript" type="text/javascript" charset="utf-8"/></script> -->
 
-    <!-- Load gui library -->
-    {% block guilib_import %}
-        <!-- <script src={% static "webclient/js/webclient_gui.js" %} language="javascript" type="text/javascript" charset="utf-8"></script> -->
-    {% endblock %}
   </head>
   <body>
     <div id="connecting">
@@ -55,7 +50,7 @@
     {% endblock %}
 
     <!-- main client -->
-    <div id="clientwrapper">
+    <div id="tg-area">
         {% block client %}
         {% endblock %}
     </div>
