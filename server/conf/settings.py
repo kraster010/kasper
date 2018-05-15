@@ -85,18 +85,38 @@ DEFAULT_HOME = "#2"
 #  MULTISESSION_MODE = 2,3 - used by default character_create command
 START_LOCATION = "#2"
 
-INSTALLED_APPS = INSTALLED_APPS + ("world.mapengine",)
+INSTALLED_APPS = (
+    "world.mapengine",
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.admin',
+    'django.contrib.admindocs',
+    'django.contrib.flatpages',
+    'django.contrib.sites',
+    'django.contrib.staticfiles',
+    'sekizai',
+    'evennia.utils.idmapper',
+    'evennia.server',
+    'evennia.typeclasses',
+    'evennia.accounts',
+    'evennia.objects',
+    'evennia.comms',
+    'evennia.help',
+    'evennia.scripts',
+    'evennia.web.website'
+   )
 
 
 STATIC_URL = '/assets/'
+
 STATIC_ROOT = os.path.join(GAME_DIR, "web", "build")
 
 # WEBSITE_TEMPLATE = 'website'
 WEBCLIENT_TEMPLATE = 'webclient'
 
-
 STATICFILES_DIRS = (
-    os.path.join(GAME_DIR, "web", "portals", "webclient", "out"),)
+    os.path.join(GAME_DIR, "web", "portals", "out"),)
 
 
 
