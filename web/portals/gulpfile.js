@@ -100,7 +100,7 @@ gulp.task('js-compile', jsCompile.bind(this, false));
 
 // Cleaning build folder
 gulp.task('clean', () => {
-	return del( P.out.base + '**/*');
+	return del( P.out.base + '**/*', {force: true});
 });
 
 gulp.task('dev', gulp.parallel('sass-watch', 'js-watch'));
