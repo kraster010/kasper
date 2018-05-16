@@ -1,11 +1,12 @@
 // const HtmlWebPackPlugin = require("html-webpack-plugin");
+const webpack = require('webpack');
 const path = require('path');
 
 module.exports = function(portal = "webclient", config) {
 
     var wp = {
-
         mode: 'development',
+
         // --watch true, --watch false
         watch: false,
         watchOptions: {
@@ -19,16 +20,15 @@ module.exports = function(portal = "webclient", config) {
             jquery: "jQuery",
             $ : "jQuery",
         },
-    
+        
         entry: {
-            'evennia': './evennia.js',
-            'main': './index.js'
+            // 'evennia': './evennia.js',
+            'app': './app.js'
         },
     
         output: {
             path: path.resolve(__dirname, '../static/' + portal + '/js/'),
             filename: '[name].min.js', //TODO only on build
-            // filename: '[name]-[hash].min.js',
             libraryTarget: 'umd',
             library: ['TG', '[name]'],
             umdNamedDefine: true
@@ -36,7 +36,7 @@ module.exports = function(portal = "webclient", config) {
 
         resolve: {
 			modules: [
-				'node_modules',
+                'node_modules',
 				'./'
 				]
 		},
@@ -66,28 +66,32 @@ module.exports = function(portal = "webclient", config) {
         // ],
     
         optimization: {
-            runtimeChunk: {
-                name: 'vendor'
-            },
-            splitChunks: {
-                cacheGroups: {
-                    vendor: {
-                        test: path.resolve(__dirname, "node_modules"),
-                        chunks: "initial",
-                        name: "vendor",
-                        minChunks: 1,
-                        priority: 10,
-                        enforce: true
-                    }
-                }
-            }
+            // runtimeChunk: {
+            //     name: 'vendor'
+            // },
+            // splitChunks: {
+            //     cacheGroups: {
+            //         vendor: {
+            //             test: path.resolve(__dirname, "node_modules"),
+            //             chunks: "initial",
+            //             name: "vendor",
+            //             minChunks: 1,
+            //             priority: 10,
+            //             enforce: true
+            //         }
+            //     }
+            // }
         },
     
         stats: {
             modules: false,
             entrypoints: false,
             chunks: false
-        }
+        },
+
+        plugins: [
+			new webpack.NoEmitOnErrorsPlugin()
+        ]
     }
 
     return wp;

@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 
 {% load staticfiles %}
-<html dir="ltr" lang="en">
+<html dir="ltr" lang="it">
   <head>
     <title> {{game_name}} </title>
     <meta http-equiv="content-type", content="application/xhtml+xml; charset=UTF-8" />
@@ -20,6 +20,7 @@
 
     <!-- Set up Websocket url and load the evennia.js library-->
     <script language="javascript" type="text/javascript">
+    
         {% if websocket_enabled %}
             var wsactive = true;
         {% else %}
@@ -38,9 +39,13 @@
             var wsurl = "ws://" + this.location.hostname + ":{{websocket_port}}";
         {% endif %}
     </script>
+    {% block guilib_import %}
+    <script src="{% static "webclient/js/app.min.js" %}"/></script>
+    {% endblock%}
 
   </head>
   <body>
+
     <div id="connecting">
         {% block connecting %}
         {% endblock %}
@@ -50,7 +55,7 @@
     {% endblock %}
 
     <!-- main client -->
-    <div id="tg-area">
+    <div class="tg-area">
         {% block client %}
         {% endblock %}
     </div>

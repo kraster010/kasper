@@ -97,7 +97,7 @@ STATIC_ROOT = os.path.join(GAME_DIR, "web", "static")
 WEBCLIENT_TEMPLATE = 'webclient'
 
 STATICFILES_DIRS = (
-    os.path.join(GAME_DIR, "web", "portals", "out"),)
+    os.path.join(GAME_DIR, "web", "static_overrides"),)
 
 
 

@@ -30,31 +30,36 @@ const paths = {
 			scss : "scss/**/*.scss",
 			js: "js/"
 		},
-		out : {
-			base: "./out/webclient/",
+		static_overrides : {
+			base: "../static_overrides/webclient/",
 			js: "js/",
 			css: "css/"
+		},
+		static : {
+			base: "../static/webclient/"
 		}
 	}
 }
 	
 var portal = "webclient"; //default
-	//seting different portal building via --portal arg (website, admin etc)
+
+//Set the folder out on "static" to see changes without having to restart Evennia
 if (argv.live) {
-	paths[portal].out.base = "../static/webclient/";
+	paths[portal].static_overrides.base = paths[portal].static.base;
 };
 
 if (argv.portal == 'webclient') {
-portal = argv.portal
+	portal = argv.portal
 };
 
 let P = paths[portal]; // just short var
 
 // Configuration files
-const webpack_config = require("./webpack.config.js")(portal, paths);
+const webpack_config = require("./webpack.config.js")(portal, paths[portal]);
 const postcss_config = require("./postcss.config.js")
 
 const devBuild = ((process.env.NODE_ENV || 'development').trim().toLowerCase() === 'development');
+
 
 
 // compile javascript with webpack
@@ -68,7 +73,7 @@ function jsCompile(watch) {
 		.pipe(cache('js'))
 		.pipe(plumber())
 		.pipe(webpackStream(webpack_config, webpack))
-		.pipe(gulp.dest(P.out.base + P.out.js))
+		.pipe(gulp.dest(P.static_overrides.base + P.static_overrides.js))
 		.pipe(debug());
 }
 
@@ -90,19 +95,22 @@ gulp.task('sass-compile', () => {
 		.pipe(sassUnicode())
 		.pipe(postcss(postcss_config))
 		// .pipe(paths.src.base + 'css' ? sourcemaps.write('./maps'))
-		.pipe(gulp.dest(P.out.base + P.out.css))
+		.pipe(gulp.dest(P.static_overrides.base + P.static_overrides.css))
 		.pipe(debug());
 });
 
+//watching js watch and compile on live stream
 gulp.task('js-watch', jsCompile.bind(this, true));
 gulp.task('js-compile', jsCompile.bind(this, false));
 
-
 // Cleaning build folder
 gulp.task('clean', () => {
-	return del( P.out.base + '**/*', {force: true});
+	return del( P.static_overrides.base + '**/*', {force: true});
 });
 
+//Task for watching development
 gulp.task('dev', gulp.parallel('sass-watch', 'js-watch'));
+
+//Compiling file withouth Watch setting
 gulp.task('build', gulp.series('clean', 'js-compile', 'sass-compile'));
 
