@@ -5,25 +5,44 @@ export default class TgGui {
     constructor() {
 
         this.isConnected = false;
-
         this.options = {
-
+            debug: true
         }
-        // Notifications
-        this.unread = 0;
-        this.originalTitle = document.title;
-        this.focused = true;
-        this.favico = null;
+
+        this.notification = {
+            unread: 0,
+            originalTitle: document.title,
+            focused: true,
+            favico: null
+        }
     }
 
     init() {
+
         let _ = this;
         // Event when client finishes loading
         if ("Notification" in window) {
             Notification.requestPermission();
         }
 
-        // This is safe to call, it will always only
+        _.checkOptions();
+        _.initHandshake();
+    }
+
+    checkOptions() {
+        let _ = this;
+
+        // Debug container
+        if(_.options.debug) {
+            $('body').append('<div id="debug"/>');
+            console.log("Attenzione, i LOG client sono attivi.");
+        }
+    }
+
+    initHandshake() {
+
+        let _ = this;
+         // This is safe to call, it will always only
         // initialize once.
         Evennia.init();
         // register listeners
@@ -47,13 +66,14 @@ export default class TgGui {
     }
 
     // Handle text coming from the server
-
     onText(args, kwargs) {
 
         let _ = this;
+        
         // append message to previous ones, then scroll so latest is at
         // the bottom. Send 'cls' kwarg to modify the output class.
         let renderto = "main";
+
         if (kwargs["type"] == "help") {
             if (("helppopup" in options) && (options["helppopup"])) {
                 renderto = "#helpdialog";
@@ -68,12 +88,11 @@ export default class TgGui {
                 scrollTop: document.getElementById("outputfield").scrollHeight
             }, 0);
 
-            onNewLine(args[0], null);
+            _.onNewLine(args[0], null);
         } else {
+            console.log('TODO: openPopup(renderto, args[0])')
             // openPopup(renderto, args[0]);
         }
-        _.debug([args, kwargs]);
-
     }
 
     onPrompt() {
@@ -100,51 +119,52 @@ export default class TgGui {
         console.log('onGotOptions')
 
     }
+    
+    // Silences events we don't do anything with.
+    onSilence(cmdname, args, kwargs) {}
 
-    onSilence(cmdname, args, kwargs) {
+    onNewLine(text, originator) {
         let _ = this;
-        _.debug([cmdname, args, kwargs]);
+        if (!_.notification.focused) {
+            // Changes unfocused browser tab title to number of unread messages
+            _.notification.unread++;
+            //   favico.badge(unread);
+            // document.title = "(" + unread + ") " + originalTitle;
+            if ("Notification" in window) {
+                if (("notification_popup" in options) && (options["notification_popup"])) {
+                    Notification.requestPermission().then(function (result) {
+                        console.log('TODO Here');
+                        //     if(result === "granted") {
+                        //     var title = originalTitle === "" ? "Evennia" : originalTitle;
+                        //     var options = {
+                        //         body: text.replace(/(<([^>]+)>)/ig,""),
+                        //         icon: "/static/website/images/evennia_logo.png"
+                        //     }
+
+                        //     var n = new Notification(title, options);
+                        //     n.onclick = function(e) {
+                        //         e.preventDefault();
+                        //          window.focus();
+                        //          this.close();
+                        //     }
+                        //   }
+                    });
+                }
+                if (("notification_sound" in options) && (options["notification_sound"])) {
+                    console.log('TODO Here (audio/sound?)');
+
+                    // var audio = new Audio("/static/webclient/media/notification.wav");
+                    // audio.play();
+                }
+            }
+        }
     }
 
-    // onNewLine(text, originator) {
-    //     if(!focused) {
-    //       // Changes unfocused browser tab title to number of unread messages
-    //       unread++;
-    //       favico.badge(unread);
-    //       document.title = "(" + unread + ") " + originalTitle;
-    //       if ("Notification" in window){
-    //         if (("notification_popup" in options) && (options["notification_popup"])) {
-    //             Notification.requestPermission().then(function(result) {
-    //                 if(result === "granted") {
-    //                 var title = originalTitle === "" ? "Evennia" : originalTitle;
-    //                 var options = {
-    //                     body: text.replace(/(<([^>]+)>)/ig,""),
-    //                     icon: "/static/website/images/evennia_logo.png"
-    //                 }
-      
-    //                 var n = new Notification(title, options);
-    //                 n.onclick = function(e) {
-    //                     e.preventDefault();
-    //                      window.focus();
-    //                      this.close();
-    //                 }
-    //               }
-    //             });
-    //         }
-    //         if (("notification_sound" in options) && (options["notification_sound"])) {
-    //             var audio = new Audio("/static/webclient/media/notification.wav");
-    //             audio.play();
-    //         }
-    //       }
-    //     }
-    //   }
-
     // Appends any kind of message inside output box
-    debug(msg) {
-        console.log('debug');
+    log(msg) {
         let _ = this;
         if (msg) {
-            $('.tg-output').append('DEBUG MSG: ' + msg);
+            $('#debug').append('DEBUG MSG: ' + msg);
         }
     }
 

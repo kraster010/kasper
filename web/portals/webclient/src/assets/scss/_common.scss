@@ -50,3 +50,13 @@ html, body{
         height: 100%;
     }
 }
+
+
+//debug container
+#debug {
+    border: 2px solid red;
+    max-height:400px;
+    overflow: auto;
+    margin: 2px;
+    line-height: 1;
+}
