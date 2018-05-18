@@ -1,3 +1,5 @@
-// load bootstrap + custom override;
-@import "node_modules/bootstrap/scss/bootstrap";
+//Node Modules
+@import "bourbon";
+//Custom Modules
+@import "colors";
 @import "common";

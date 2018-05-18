@@ -18,6 +18,8 @@ const gulp = require('gulp'),
 	webpack = require('webpack'),
 	chalk = require('chalk'),
 	argv = require('yargs').argv,
+	bourbon    = require("bourbon").includePaths,
+    neat       = require("bourbon-neat").includePaths,
 	webpackStream = require('webpack-stream');
 
 
@@ -90,7 +92,8 @@ gulp.task('sass-compile', () => {
 	return gulp.src(P.src.base + P.src.scss)
 		// .pipe( sourcemaps.init())
 		.pipe(sass({
-			errLogToConsole: true
+			errLogToConsole: true,
+			includePaths: [bourbon, neat]
 		}).on('error', sass.logError))
 		.pipe(sassUnicode())
 		.pipe(postcss(postcss_config))
