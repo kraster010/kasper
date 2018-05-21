@@ -1,17 +1,30 @@
-
-{% extends "base.html" %}
-
-{% block client %}
+ {% extends "base.html" %} {% block client %}
 
 <div class="tg-topbar">
+    <div class="tg-topbar-item">
+        [1]
+    </div>
+    <div class="tg-topbar-item">
+        [2]
+    </div>
+    <div class="tg-topbar-item">
+        [3]
+    </div>
+    <div class="tg-topbar-item">
+        [3]
+    </div>
+    <div class="tg-topbar-item">
+        [4]
+    </div>
+
 </div>
 
 <section class="tg-dock">
     <div id="outputfield" class="tg-output">
     </div>
     <div class="tg-input">
-        <input type="text"  id="inputfield" value="">
-        <button type="button" id="inputsend" value="invia">Invia</button>
+        <input type="text" id="inputfield" value="">
+        <button type="button" id="inputsend" class="btn inputsend" value="invia">Invia</button>
     </div>
     <aside class="tg-sidebar">
     </aside>

@@ -1,10 +1,10 @@
 {
 	"dependencies": {
 		"autoprefixer": "^8.5.0",
-		"bourbon": "^5.0.0",
 		"cssnano": "^3.10.0",
 		"gulp": "^4.0.0",
 		"jquery": "^3.3.1",
+		"susy": "^3.0.5",
 		"webpack": "^4.8.3"
 	},
 	"devDependencies": {

@@ -18,8 +18,6 @@ const gulp = require('gulp'),
 	webpack = require('webpack'),
 	chalk = require('chalk'),
 	argv = require('yargs').argv,
-	bourbon    = require("bourbon").includePaths,
-    neat       = require("bourbon-neat").includePaths,
 	webpackStream = require('webpack-stream');
 
 
@@ -93,7 +91,7 @@ gulp.task('sass-compile', () => {
 		// .pipe( sourcemaps.init())
 		.pipe(sass({
 			errLogToConsole: true,
-			includePaths: [bourbon, neat]
+			includePaths: ['node_modules/susy/sass']
 		}).on('error', sass.logError))
 		.pipe(sassUnicode())
 		.pipe(postcss(postcss_config))
