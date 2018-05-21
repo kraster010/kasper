@@ -7,7 +7,7 @@ export default class TgGui {
 
         this.isConnected = false;
         this.options = {
-            debug: true
+            debug: true,
         };
 
         this.notification = {
@@ -16,12 +16,6 @@ export default class TgGui {
             focused: true,
             favico: null
         };
-
-        this.input_history = {
-            history_max: 23,
-            history: new Array(),
-            history_pos: 0
-        }
     }
 
     init() {
@@ -30,7 +24,6 @@ export default class TgGui {
         // if ("Notification" in window) {
         //     Notification.requestPermission();
         // }
-        console.log(input_history);
         _.checkOptions();
         _.initHandshake();
         _.addDOMEvents();
@@ -40,7 +33,7 @@ export default class TgGui {
     checkOptions() {
         let _ = this;
 
-        // Debug container
+        // DEBUG STATUS
         if(_.options.debug) {
             $('body').append('<div id="debug"/>');
             console.log("%c Attenzione, i LOG client sono attivi.", 'background: red; color: white');
@@ -86,7 +79,8 @@ export default class TgGui {
 
     // Handle text coming from the server
     onText(args, kwargs) {
-        console.log(kwargs);
+
+        console.log('onText');
         let _ = this;
         
         // append message to previous ones, then scroll so latest is at
@@ -140,7 +134,7 @@ export default class TgGui {
 
     // New line insert event (coming from user or server).
     onNewLine(text, originator) {
-
+        console.log('onNewLine');
         let _ = this;
         // Changes unfocused browser tab title to number of unread messages
         // unread++;
@@ -199,7 +193,7 @@ export default class TgGui {
         let inputfield = $('#inputfield');
         let outtext = inputfield.val();
         let lines = outtext.trim().replace(/[\r]+/,"\n").replace(/[\n]+/, "\n").split("\n");
-        console.log(lines);
+
         for(var i = 0; i < lines.length; i++) {
             let line = lines[i].trim();
             if(line.length > 7 && line.substr(0,7) == '##send') {
@@ -215,9 +209,9 @@ export default class TgGui {
                 Evennia.msg(cmdname, args, kwargs);
             }
             else {
-                // input_history.add(line);
-                // inputfield.val('');
-                // Evennia.msg("text", [line], {});
+                input_history.add(line);
+                inputfield.val('');
+                Evennia.msg("text", [line], {});
             }
         }
 
@@ -229,17 +223,43 @@ export default class TgGui {
     onKeyPress(event) {
         console.log('onKeyPress');        
     }
-
+    
+    // catch all keyboard input, handle special chars
     onKeyDown(event) {
-        console.log('onKeyDown')
+
+        console.log('onKeyDown');
+        let _ = this;
+        let code = event.which;
+        let history_entry = null;
+        let inputfield = $('#inputfield');
+
+        inputfield.focus();
+        // enter key sends text
+        if (code === 13 ) {
+            _.doSendText();
+            event.preventDefault();
+        }
+        else if (inputfield[0].selectionStart == inputfield.val().length) {
+            // Only process up/down arrow if cursor is at the end of the line.    
+            if(code === 30) {
+
+            }
+            else if (code === 40) {
+                history_entry = input_history.fwd();
+            }
+        }
+        // escape key
+        if (code === 27 ) {}
+        
     }
     
     addDOMEvents() {
         let _ = this;
 
-        // $('inputfield').keypress(_.onKeyPress.bind(_));
+        // Pressing the send button
         $("#inputsend").on("click", _.doSendText.bind(_));
-        // $(document).keydown(_.onKeyDown.bind());            
+         // Event when any key is pressed
+        $(document).keydown(_.onKeyDown.bind(_));            
     }
 
     // Appends any kind of message inside Debug Output box
