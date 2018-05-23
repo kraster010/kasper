@@ -124,7 +124,7 @@ function generateSprites(done) {
 	let imgSpriteList = stream(imgStream)
 	let cssSpriteList = stream(cssStream)
 		.pipe(concat('_sprites.scss'))
-		.pipe(gulp.dest(P.src.base + P.src.scss))
+		.pipe(gulp.dest(P.src.static + '/images/'));
 
 	gutil.log(chalk.green("Sprites generated correctly"));
 
@@ -172,10 +172,16 @@ gulp.task('sass-compile', () => {
 		.pipe(debug());
 });
 
+gulp.task('copy-assets', function(){
+	return gulp.src(P.src.base + P.src.img + '**/*.{png,jpg,gif}')
+		.pipe(gulp.dest(P.static.base  + '/images'));
+});
+
 // generate CSS sprite images
 gulp.task('generate-sprites', (done) => {
 	//waiting stream end
-	return generateSprites(done);
+	//return generateSprites(done);
+	done();
 });
 
 //watching js watch and compile on live stream
@@ -188,8 +194,8 @@ gulp.task('clean', () => {
 });
 
 //Task for watching development
-gulp.task('dev', gulp.series('generate-sprites', gulp.parallel('sass-watch', 'js-watch')));
+gulp.task('dev', gulp.series('generate-sprites', 'copy-assets', gulp.parallel('sass-watch', 'js-watch')));
 
 //Compiling file withouth Watch setting
-gulp.task('build', gulp.series('clean', 'generate-sprites', 'js-compile', 'sass-compile'));
+gulp.task('build', gulp.series('clean', 'generate-sprites', 'copy-assets', 'js-compile', 'sass-compile'));
 

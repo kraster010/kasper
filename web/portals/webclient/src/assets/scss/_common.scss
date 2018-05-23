@@ -1,6 +1,6 @@
 @import 'variables';
 //Sprites Mixins and List
-@import 'sprites';
+//@import 'sprites';
 @import 'sprites-mixins';
 /*Elements*/
 @import 'navbar';
@@ -40,8 +40,8 @@ html, body {
         display: flex;
         flex-grow: 1;
         padding: $border-size * 2;
-        // background-color: $black;
-        // color: $white;
+        background-color: $black;
+        color: $white;
     }
 
     .tg-output-wrap {

@@ -8,12 +8,13 @@
 
     .tg-border {
         position: absolute;
-
+        background-position: 0 0;
     }
     .tg-border-top, .tg-border-bottom {
         position: absolute;
         height: $border-size;
         width: 100%;
+        background-repeat: repeat-x;
 
         // Corners
         &::after, &::before {
@@ -35,6 +36,7 @@
         }
     }
     
+    
     .tg-border-left, .tg-border-right{
         position: absolute;
         width: $border-size;
@@ -44,18 +46,35 @@
     
     .tg-border-top {
         top: 0;
-        @include sprite($stone-horizontal-top);
+        background-image: url('../images/frame/stone-horizontal-top.jpg');
+        &::after {
+            background-image: url('../images/frame/stone-corner-topright.jpg');
+        }
+        &::before {
+            background-image: url('../images/frame/stone-corner-topleft.jpg');
+        }
+
     }
     .tg-border-bottom {
         bottom: 0;
+        background-image: url('../images/frame/stone-horizontal-bottom.jpg');
+        &::after {
+            background-image: url('../images/frame/stone-corner-bottomright.jpg');
+        }
+        &::before {
+            background-image: url('../images/frame/stone-corner-bottomleft.jpg');
+        }
     }
+    
 
     .tg-border-right {
         right: 0;
+        background-image: url('../images/frame/stone-vertical-right.jpg');
     }
 
     .tg-border-left {
         left: 0;
+        background-image: url('../images/frame/stone-vertical-left.jpg');
     }
     
 }
