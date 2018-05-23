@@ -1,33 +1,90 @@
- {% extends "base.html" %} {% block client %}
-
-<div class="tg-topbar">
-    <div class="tg-topbar-item">
-        [1]
-    </div>
-    <div class="tg-topbar-item">
-        [2]
-    </div>
-    <div class="tg-topbar-item">
-        [3]
-    </div>
-    <div class="tg-topbar-item">
-        [3]
-    </div>
-    <div class="tg-topbar-item">
-        [4]
-    </div>
-
-</div>
-
+ {% extends "base.html" %}
+ 
+ {% block client %}
+ <nav id="tgNavbar" class="tg-navbar navbar navbar-expand" role="navigation" aria-label="main navigation">
+    <a class="navbar-brand" href="#"> {{game_name}} </a>
+    <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+            <a href="#" class="nav-link">nav-link</a>
+        </li>
+        <li class="nav-item">
+            <a href="#" class="nav-link">nav-link</a>
+        </li>
+        <li class="nav-item">
+            <a href="#" class="nav-link">nav-link</a>
+        </li>
+        <li class="nav-item">
+            <a href="#" class="nav-link">nav-link</a>
+        </li>
+        <li id="helpDropDown"  class="nav-item dropdown">
+            <a href="#" class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Aiuto</a>
+            <div class="dropdown-menu" aria-labelledby="helpDropDown">
+                    <a class="dropdown-item" href="#">Action</a>
+                    <a class="dropdown-item" href="#">Another action</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="#">Something else here</a>
+            </div>
+        </li>
+        <li id="toggleNavbarPosition" class="nav-item">
+            <a href="#">toggleposition</a>
+        </li>
+    </ul>
+</nav>
 <section class="tg-dock">
-    <div id="outputfield" class="tg-output">
+    <aside class="tg-left-sidebar ">//left sidebar</aside>
+    <div class="tg-io">
+        <div class="tg-output tg-box">
+            <div class="tg-border-box">
+                <div class="tg-border tg-border-top"></div>
+                <div class="tg-border tg-border-left"></div>
+                <div class="tg-border tg-border-right"></div>
+                <div class="tg-border tg-border-bottom"></div>            
+            </div>
+            <div id="outputfield" class="tg-output-wrap"></div>
+        </div>
+        <div class="tg-input tg-box">
+            <div class="tg-border-box">
+                <div class="tg-border tg-border-top"></div>
+                <div class="tg-border tg-border-left"></div>
+                <div class="tg-border tg-border-right"></div>
+                <div class="tg-border tg-border-bottom"></div>
+            </div>
+            <input type="text" id="inputfield" value="" placeholder="Cosa vuoi fare?">
+            <button type="button" id="inputsend" class="btn inputsend" value="invia">Invia</button>
+        </div>
     </div>
-    <div class="tg-input">
-        <input type="text" id="inputfield" value="">
-        <button type="button" id="inputsend" class="btn inputsend" value="invia">Invia</button>
+    <div class="tg-right-sidebar">
+        <div class="tg-map"></div>
     </div>
-    <aside class="tg-sidebar">
-    </aside>
 </section>
+{% endblock %}
 
+
+
+{% block borders %}
+
+{% endblock %}
+
+
+
+{% block nojavascript %}
+<div id="noscript" class="err">
+        <h3>Errore JavaScript: Il client {{game_name}} MUD richiede di
+            ha Javascript attivato.</h3>
+            <p>Disattiva eventuali script-blocker e/o passare a un web browser che supporta javascript. <p>
+                Questo errore potrebbe anche essere dovuto al fatto di non essere in grado di accedere a
+                la libreria jQuery.</p>
+        <!-- This is will only fire if javascript is actually active -->
+        <script language="javascript" type="text/javascript">
+            $('#noscript').remove();
+        </script>
+    </div>
+{% endblock %}
+
+{% block nojquery %}
+<script type="text/javascript" charset="utf-8">
+    if(!window.jQuery) {
+        document.write("<div class='err'>Libreria jQuery non trovata o caricata. Controlla che Javascript non sia bloccato nel tuo browser.</div>");
+    }
+</script>
 {% endblock %}

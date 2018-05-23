@@ -3,7 +3,9 @@ const gulp = require('gulp'),
 	cache = require('gulp-cached'),
 	debug = require('gulp-debug'),
 	del = require('del'),
+	path = require('path'),
 	exec = require('child_process').exec,
+	concat = require("gulp-concat"),
 	fs = require('fs'),
 	gutil = require('gulp-util'),
 	jsbeautify = require('gulp-jsbeautify'),
@@ -18,6 +20,8 @@ const gulp = require('gulp'),
 	webpack = require('webpack'),
 	chalk = require('chalk'),
 	argv = require('yargs').argv,
+	stream = require('merge-stream'),
+	spritesmith = require('gulp.spritesmith'),
 	webpackStream = require('webpack-stream');
 
 
@@ -26,22 +30,24 @@ const log = console.log;
 const paths = {
 	webclient : {
 		src : {
-			base: "./webclient/src/assets/", 
-			scss : "scss/**/*.scss",
-			js: "js/"
+			base: './webclient/src/assets/', 
+			scss : 'scss/',
+			js: 'js/',
+			img: 'images/'
 		},
 		static_overrides : {
-			base: "../static_overrides/webclient/",
-			js: "js/",
-			css: "css/"
+			base: '../static_overrides/webclient/',
+			js: 'js/',
+			css: 'css/',
+			img: 'images/',
 		},
 		static : {
-			base: "../static/webclient/"
+			base: '../static/webclient/'
 		}
 	}
 }
 	
-var portal = "webclient"; //default
+var portal = 'webclient'; //default
 
 //Set the folder out on "static" to see changes without having to restart Evennia
 if (argv.live) {
@@ -62,6 +68,72 @@ const devBuild = ((process.env.NODE_ENV || 'development').trim().toLowerCase() =
 
 
 
+//Generating sprites based on folder located inside resources/img path. 
+//Adding the suffix @2x before the image extension (.png) will generate a separate sprite for the retina version.
+
+//get folders list
+function getFolders(dir) {
+	return fs.readdirSync(dir)
+		.filter(function (file) {
+			return fs.statSync(path.join(dir, file)).isDirectory();
+		});
+}
+
+function generateSprites(done) {
+
+	let folders = getFolders(P.src.base + P.src.img + 'sprites/'),
+		cssStream = [],
+		imgStream = [];
+
+
+	log(chalk.green('Generating ') + chalk.yellow(folders.length)  + " total sprites..." );
+
+	if (folders.length == 0 ) {
+		console.log('??')
+		return done();
+	}
+
+	console.log('qui arriva?');
+
+	for (let i = 0, len = folders.length; i < len; i++) {
+		let sprite_options = {
+			imgName: folders[i] + '_sprite.png',
+			imgPath: '../images/' + folders[i] + '_sprite.png',
+			cssName: "_" + folders[i] + '_sprite.scss',
+			// retinaSrcFilter: P.src.base + P.src.img + folders[i] + '/*@2x.png',
+			// retinaImgName: folders[i] + '_sprite_2x.png',
+			// retinaImgPath: P.static_overrides.base + P.static_overrides.img + folders[i] + '_sprite_2x.png',
+			cssOpts: {
+				functions: false
+			}
+		};
+
+	
+
+		// generate our spritesheets
+		let sprite = gulp.src(P.src.base + P.src.img + 'sprites/' + folders[i] + '/**/*.{png,jpg,gif}')
+			.pipe(spritesmith(sprite_options));
+
+		// output our images locally
+		imgStream[i] = sprite.img.pipe(gulp.dest(P.static_overrides.base + P.static_overrides.img));
+		cssStream[i] = sprite.css;
+
+		log("	" + chalk.cyan((i + 1)) + " " + sprite_options.imgName);
+	}
+	
+	let imgSpriteList = stream(imgStream)
+	let cssSpriteList = stream(cssStream)
+		.pipe(concat('_sprites.scss'))
+		.pipe(gulp.dest(P.src.base + P.src.scss))
+
+	gutil.log(chalk.green("Sprites generated correctly"));
+
+	return stream(imgStream, cssSpriteList)
+}
+
+
+
+
 // compile javascript with webpack
 function jsCompile(watch) {
 
@@ -79,7 +151,7 @@ function jsCompile(watch) {
 
 // Watch sass files for changes then compile and upload
 gulp.task( 'sass-watch', () => {
-	var watcher = gulp.watch(P.src.base + P.src.scss, { interval: 500, usePolling: true}, gulp.series('sass-compile'));
+	var watcher = gulp.watch(P.src.base + P.src.scss + '**/*.scss', { interval: 500, usePolling: true}, gulp.series('sass-compile'));
 		watcher.on('all', (event, path) => {
 			console.log('File ' + path + ' was ' + event + ', running tasks...' );
 	});
@@ -87,7 +159,7 @@ gulp.task( 'sass-watch', () => {
 
 // Compile sass files
 gulp.task('sass-compile', () => {
-	return gulp.src(P.src.base + P.src.scss)
+	return gulp.src(P.src.base + P.src.scss + '**/*.scss')
 		// .pipe( sourcemaps.init())
 		.pipe(sass({
 			errLogToConsole: true,
@@ -100,6 +172,12 @@ gulp.task('sass-compile', () => {
 		.pipe(debug());
 });
 
+// generate CSS sprite images
+gulp.task('generate-sprites', (done) => {
+	//waiting stream end
+	return generateSprites(done);
+});
+
 //watching js watch and compile on live stream
 gulp.task('js-watch', jsCompile.bind(this, true));
 gulp.task('js-compile', jsCompile.bind(this, false));
@@ -110,8 +188,8 @@ gulp.task('clean', () => {
 });
 
 //Task for watching development
-gulp.task('dev', gulp.parallel('sass-watch', 'js-watch'));
+gulp.task('dev', gulp.series('generate-sprites', gulp.parallel('sass-watch', 'js-watch')));
 
 //Compiling file withouth Watch setting
-gulp.task('build', gulp.series('clean', 'js-compile', 'sass-compile'));
+gulp.task('build', gulp.series('clean', 'generate-sprites', 'js-compile', 'sass-compile'));
 

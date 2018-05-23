@@ -1,13 +1,16 @@
+//NPM Modules
+import 'js-cookie';
+import lodash from  'lodash';
+//My Modules
 import 'evennia';
 import {input_history} from 'modules/input_history';
-
 export default class TgGui {
 
     constructor() {
 
         this.isConnected = false;
         this.options = {
-            debug: true,
+            debug: false,
         };
 
         this.notification = {
@@ -19,22 +22,19 @@ export default class TgGui {
     }
 
     init() {
-        let _ = this;
         // Event when client finishes loading
         // if ("Notification" in window) {
         //     Notification.requestPermission();
         // }
-        _.checkOptions();
-        _.initHandshake();
-        _.addDOMEvents();
+        this.checkOptions();
+        this.initHandshake();
+        this.addDOMEvents();
         
     }
 
     checkOptions() {
-        let _ = this;
-
         // DEBUG STATUS
-        if(_.options.debug) {
+        if(this.options.debug) {
             $('body').append('<div id="debug"/>');
             console.log("%c Attenzione, i LOG client sono attivi.", 'background: red; color: white');
         }
@@ -47,15 +47,15 @@ export default class TgGui {
         // initialize once.
         Evennia.init();
         // register listeners
-        Evennia.emitter.on("text", _.onText.bind(this));
-        Evennia.emitter.on("prompt", _.onPrompt.bind(this));
-        Evennia.emitter.on("default", _.onDefault.bind(this));
-        Evennia.emitter.on("connection_close", _.onConnectionClose.bind(this));
-        Evennia.emitter.on("logged_in", _.onLoggedIn.bind(this));
-        Evennia.emitter.on("webclient_options", _.onGotOptions.bind(this));
+        Evennia.emitter.on("text", this.onText.bind(_));
+        Evennia.emitter.on("prompt", this.onPrompt.bind(_));
+        Evennia.emitter.on("default", this.onDefault.bind(_));
+        Evennia.emitter.on("connection_close", this.onConnectionClose.bind(_));
+        Evennia.emitter.on("logged_in", this.onLoggedIn.bind(_));
+        Evennia.emitter.on("webclient_options", this.onGotOptions.bind(_));
         // silence currently unused events
-        Evennia.emitter.on("connection_open", _.onSilence.bind(this));
-        Evennia.emitter.on("connection_error", _.onSilence.bind(this));
+        Evennia.emitter.on("connection_open", this.onSilence.bind(_));
+        Evennia.emitter.on("connection_error", this.onSilence.bind(_));
 
         // set an idle timer to send idle every 3 minutes,
         // to avoid proxy servers timing out on us
@@ -82,11 +82,11 @@ export default class TgGui {
 
         console.log('onText');
         let _ = this;
-        
         // append message to previous ones, then scroll so latest is at
         // the bottom. Send 'cls' kwarg to modify the output class.
         let renderto = "main";
 
+        lodash.isEmpty(kwargs);
         if (kwargs["type"] == "help") {
             if (("helppopup" in options) && (options["helppopup"])) {
                 renderto = "#helpdialog";
@@ -95,13 +95,13 @@ export default class TgGui {
 
         if (renderto == "main") {
             let mwin = $("#outputfield");
-            let cls = kwargs == null ? 'out' : kwargs['cls'];
+            let cls = lodash.isEmpty(kwargs) ? 'out' : kwargs['cls'];
             mwin.append("<div class='" + cls + "'>" + args[0] + "</div>");
             mwin.animate({
                 scrollTop: document.getElementById("outputfield").scrollHeight
             }, 0);
 
-            _.onNewLine(args[0], null);
+            this.onNewLine(args[0], null);
 
         } else {
             console.log('TODO: openPopup(renderto, args[0])')
@@ -177,14 +177,11 @@ export default class TgGui {
 
     // Grab text from inputline and send to Server
     doSendText() {
-
-        let _ = this;       
-
         if(!Evennia.isConnected()) {
             if(reconnect()) {
                 //Making a connection if the user does not have one.
-                _.onText(['Riconnessione in corso..."'], {cls: "sys"});
-                _.connectToServer();
+                this.onText(['Riconnessione in corso..."'], {cls: "sys"});
+                this.connectToServer();
 
             };
             return ;
@@ -236,7 +233,7 @@ export default class TgGui {
         inputfield.focus();
         // enter key sends text
         if (code === 13 ) {
-            _.doSendText();
+            this.doSendText();
             event.preventDefault();
         }
         else if (inputfield[0].selectionStart == inputfield.val().length) {
@@ -252,19 +249,26 @@ export default class TgGui {
         if (code === 27 ) {}
         
     }
-    
+
+    toggleNavbarPosition() {
+       $('#tgNavbar').toggleClass('order-2');
+    }
+
     addDOMEvents() {
+
         let _ = this;
 
         // Pressing the send button
-        $("#inputsend").on("click", _.doSendText.bind(_));
+        $("#inputsend").on("click", this.doSendText.bind(_));
          // Event when any key is pressed
-        $(document).keydown(_.onKeyDown.bind(_));            
+        $(document).keydown(this.onKeyDown.bind(_));
+        
+        /* NavBar events */
+        $('#toggleNavbarPosition').on('click', this.toggleNavbarPosition);
     }
 
     // Appends any kind of message inside Debug Output box
     clog(msg) {
-        let _ = this;
         if (msg) {
             $('#debug').append('DEBUG MSG: ' + msg);
         }

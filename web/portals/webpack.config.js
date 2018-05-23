@@ -50,8 +50,9 @@ module.exports = function(portal = "webclient", config) {
                     presets: [
                         ["env", {
                             modules: false
-                        }]
+                        }],
                     ],
+                    compact: false
                 }
             }, 
         ]},
