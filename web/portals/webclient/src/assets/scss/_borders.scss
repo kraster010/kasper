@@ -1,0 +1,61 @@
+
+.tg-border-box {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+
+    .tg-border {
+        position: absolute;
+
+    }
+    .tg-border-top, .tg-border-bottom {
+        position: absolute;
+        height: $border-size;
+        width: 100%;
+
+        // Corners
+        &::after, &::before {
+            content: '';
+            position: absolute;
+            display: block;
+            width: $border-size;
+            height: $border-size;
+        }
+
+        &::before {
+            right: 0;
+            left: 0;
+        }
+
+        &::after {
+            top: 0;
+            right: 0;
+        }
+    }
+    
+    .tg-border-left, .tg-border-right{
+        position: absolute;
+        width: $border-size;
+        top: $border-size;
+        bottom: $border-size;
+    }
+    
+    .tg-border-top {
+        top: 0;
+        @include sprite($stone-horizontal-top);
+    }
+    .tg-border-bottom {
+        bottom: 0;
+    }
+
+    .tg-border-right {
+        right: 0;
+    }
+
+    .tg-border-left {
+        left: 0;
+    }
+    
+}

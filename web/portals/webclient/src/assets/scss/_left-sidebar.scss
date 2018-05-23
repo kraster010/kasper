@@ -1,0 +1,14 @@
+
+    // Sidebar (left side)
+    .tg-left-sidebar {
+        @extend .d-flex;
+        width: 45px;
+        border-right: 1px solid $black;
+        
+
+        //mobile
+        @include media-breakpoint-down(xs) {
+            display: none;
+        }
+    }
+
