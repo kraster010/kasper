@@ -22,7 +22,6 @@ const gulp = require('gulp'),
 	argv = require('yargs').argv,
 	stream = require('merge-stream'),
 	spritesmith = require('gulp.spritesmith'),
-	image = require('gulp-image'),
 	webpackStream = require('webpack-stream');
 
 
@@ -82,13 +81,15 @@ function getFolders(dir) {
 
 function generateSprites(done) {
 
-	let folders = getFolders(P.src.base + P.src.img + 'sprites/'),
-		cssStream = [],
-		imgStream = [];
-
-	if (folders.length == 0 ) {
-		return done();
+	let dir = P.src.base + P.src.img + 'sprites/';
+	
+	if(fs.existsSync(dir)) {
+		let folders = getFolders(dir),
+			cssStream = [],
+			imgStream = [];
 	}
+	else return done();
+
 		
 	log(chalk.green('Generating ') + chalk.yellow(folders.length)  + " total sprites..." );
 
