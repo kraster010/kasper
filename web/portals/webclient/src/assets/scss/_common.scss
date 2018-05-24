@@ -1,4 +1,3 @@
-@import 'variables';
 //Sprites Mixins and List
 //@import 'sprites';
 @import 'sprites-mixins';
@@ -13,6 +12,7 @@
 html, body {
     width: 100%;
     height: 100%;
+    background: url('../images/frame/background/dark-wood.jpg') repeat top left;
 }
 
 .tg-area {
@@ -28,43 +28,64 @@ html, body {
     flex-grow: 1;
     width: 100%;
     order: 1;
+}
 
-    .tg-io {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-    }
-    
-    // Main output area
-    .tg-output {
-        display: flex;
-        flex-grow: 1;
-        padding: $border-size * 2;
-        background-color: $black;
-        color: $white;
-    }
+.tg-io {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+// Main output area
+.tg-output {
+    display: flex;
+    flex-grow: 1;
+    background-color: $black;
+    color: $white;
+    z-index: 2;
 
     .tg-output-wrap {
         width: 100%;
+        z-index: 1;
     }
 
-    // Main Input text area
-    .tg-input {
-        display: flex;
-        border-top: 1px solid $black;
-        height: 30px;
-        overflow: hidden;
-       
-        input[type="text"]{
-            flex-grow: 1;
-            flex-basis: 0;
-            max-width: 100%;
-        }
+}
+
+/*
+* OPTIONS
+*/
+
+.op-003 {}
+.op-002 {}
+.op-001 {}
+
+// Attiva un divisorio per ogni blocco di testo in arrivo dal server.
+.op-004 {
+    .out {
+      border-bottom: 1px solid #444;
+      padding-bottom: .5em;
     }
+}
+.op-005 {
     
-    .tg-box {
-        position: relative;
-        margin: $border-size / 2;
+}
+
+
+
+// Main Input text area
+.tg-input {
+    display: flex;
+    border-top: 1px solid $black;
+    overflow: hidden;
+    
+    input[type="text"]{
+        width: 100%;
+        height: 30px;
+        line-height: 1;
+        
+    }
+    button[type="button"] {
+        display: none;
     }
 }
 

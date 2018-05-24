@@ -22,6 +22,7 @@ const gulp = require('gulp'),
 	argv = require('yargs').argv,
 	stream = require('merge-stream'),
 	spritesmith = require('gulp.spritesmith'),
+	image = require('gulp-image'),
 	webpackStream = require('webpack-stream');
 
 
@@ -85,15 +86,11 @@ function generateSprites(done) {
 		cssStream = [],
 		imgStream = [];
 
-
-	log(chalk.green('Generating ') + chalk.yellow(folders.length)  + " total sprites..." );
-
 	if (folders.length == 0 ) {
-		console.log('??')
 		return done();
 	}
-
-	console.log('qui arriva?');
+		
+	log(chalk.green('Generating ') + chalk.yellow(folders.length)  + " total sprites..." );
 
 	for (let i = 0, len = folders.length; i < len; i++) {
 		let sprite_options = {
@@ -107,8 +104,6 @@ function generateSprites(done) {
 				functions: false
 			}
 		};
-
-	
 
 		// generate our spritesheets
 		let sprite = gulp.src(P.src.base + P.src.img + 'sprites/' + folders[i] + '/**/*.{png,jpg,gif}')
@@ -130,8 +125,6 @@ function generateSprites(done) {
 
 	return stream(imgStream, cssSpriteList)
 }
-
-
 
 
 // compile javascript with webpack
@@ -172,7 +165,7 @@ gulp.task('sass-compile', () => {
 		.pipe(debug());
 });
 
-gulp.task('copy-assets', function(){
+gulp.task('copy-images', function(){
 	return gulp.src(P.src.base + P.src.img + '**/*.{png,jpg,gif}')
 		.pipe(gulp.dest(P.static.base  + '/images'));
 });
@@ -180,8 +173,7 @@ gulp.task('copy-assets', function(){
 // generate CSS sprite images
 gulp.task('generate-sprites', (done) => {
 	//waiting stream end
-	//return generateSprites(done);
-	done();
+	return generateSprites(done);
 });
 
 //watching js watch and compile on live stream
@@ -194,8 +186,8 @@ gulp.task('clean', () => {
 });
 
 //Task for watching development
-gulp.task('dev', gulp.series('generate-sprites', 'copy-assets', gulp.parallel('sass-watch', 'js-watch')));
+gulp.task('dev', gulp.series('generate-sprites', 'copy-images', gulp.parallel('sass-watch', 'js-watch')));
 
 //Compiling file withouth Watch setting
-gulp.task('build', gulp.series('clean', 'generate-sprites', 'copy-assets', 'js-compile', 'sass-compile'));
+gulp.task('build', gulp.series('clean', 'generate-sprites', 'copy-images', 'js-compile', 'sass-compile'));
 

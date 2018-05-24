@@ -1,3 +1,9 @@
+    
+.tg-box {
+    margin: $border-size / 2;
+    position: relative;
+    padding: $border-size;
+}
 
 .tg-border-box {
     position: absolute;
@@ -10,6 +16,7 @@
         position: absolute;
         background-position: 0 0;
     }
+
     .tg-border-top, .tg-border-bottom {
         position: absolute;
         height: $border-size;
@@ -46,35 +53,35 @@
     
     .tg-border-top {
         top: 0;
-        background-image: url('../images/frame/stone-horizontal-top.jpg');
+        background-image: url('../images/frame/borders/stone-horizontal-top.jpg');
         &::after {
-            background-image: url('../images/frame/stone-corner-topright.jpg');
+            background-image: url('../images/frame/borders/stone-corner-topright.jpg');
         }
         &::before {
-            background-image: url('../images/frame/stone-corner-topleft.jpg');
+            background-image: url('../images/frame/borders/stone-corner-topleft.jpg');
         }
 
     }
     .tg-border-bottom {
         bottom: 0;
-        background-image: url('../images/frame/stone-horizontal-bottom.jpg');
+        background-image: url('../images/frame/borders/stone-horizontal-bottom.jpg');
         &::after {
-            background-image: url('../images/frame/stone-corner-bottomright.jpg');
+            background-image: url('../images/frame/borders/stone-corner-bottomright.jpg');
         }
         &::before {
-            background-image: url('../images/frame/stone-corner-bottomleft.jpg');
+            background-image: url('../images/frame/borders/stone-corner-bottomleft.jpg');
         }
     }
     
 
     .tg-border-right {
         right: 0;
-        background-image: url('../images/frame/stone-vertical-right.jpg');
+        background-image: url('../images/frame/borders/stone-vertical-right.jpg');
     }
 
     .tg-border-left {
         left: 0;
-        background-image: url('../images/frame/stone-vertical-left.jpg');
+        background-image: url('../images/frame/borders/stone-vertical-left.jpg');
     }
     
 }

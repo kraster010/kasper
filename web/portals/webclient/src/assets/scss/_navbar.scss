@@ -4,14 +4,33 @@
     border-bottom: 1px solid $black;
     width: 100%;
     overflow: hidden;
+    font-size:12px;
+    background-color: #ede6c9;
+        color:#8e7e3b;
 
-    .tg-navbar-item {
-        padding: .2em .5em;
-        border: 1px solid $white;
+    a {
+        color:#8e7e3b;
+        text-shadow: 0 1px #fff;
     }
 
+    .tg-nav-list {
+        margin: 0;
+    }
+    .tg-nav-item {
+        a {
+            padding: 0 .5em;
+        }   
+    }
+
+    @include media-breakpoint-down(md){
+        .tg-nav-item {
+           text-indent: -99999px;
+        }
+    }
 
     @include media-breakpoint-down(sm){
-
+        .tg-nav-item {
+           display: none;
+        }
     }
 }

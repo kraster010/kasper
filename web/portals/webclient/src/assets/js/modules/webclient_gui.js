@@ -254,6 +254,17 @@ export default class TgGui {
        $('#tgNavbar').toggleClass('order-2');
     }
 
+    // It Applies option base on data-option attribute setted on trigger element
+    toggleClientOption() {
+        //TODO: we need to store option every triggering
+       let option = $(this).attr('data-option');
+       if (option != '') {
+           option = 'op-' + option;
+       }
+
+       $('body').toggleClass(option);
+    }
+
     addDOMEvents() {
 
         let _ = this;
@@ -265,6 +276,9 @@ export default class TgGui {
         
         /* NavBar events */
         $('#toggleNavbarPosition').on('click', this.toggleNavbarPosition);
+
+        $('.tg-trigger-option').on('click', this.toggleClientOption);
+
     }
 
     // Appends any kind of message inside Debug Output box

@@ -1,22 +1,19 @@
  {% extends "base.html" %}
  
  {% block client %}
- <nav id="tgNavbar" class="tg-navbar navbar navbar-expand" role="navigation" aria-label="main navigation">
-    <a class="navbar-brand" href="#"> {{game_name}} </a>
-    <ul class="navbar-nav mr-auto">
-        <li class="nav-item">
-            <a href="#" class="nav-link">nav-link</a>
+ <nav id="tgNavbar" class="tg-navbar">
+    <a class="tg-logo" href="#"> {{game_name}} </a>
+    <ul class="tg-nav-list list-inline">
+        <li class="tg-nav-item list-inline-item">
+            <a href="#" class="tg-nav-link">nav-link</a>
         </li>
-        <li class="nav-item">
-            <a href="#" class="nav-link">nav-link</a>
+        <li class="tg-nav-item list-inline-item">
+            <a href="#" class="tg-nav-link">nav-link</a>
         </li>
-        <li class="nav-item">
-            <a href="#" class="nav-link">nav-link</a>
+        <li id="strumentiDropDown" class="tg-nav-item list-inline-item dropdown">
+            <a href="#" class="tg-nav-link">Strumenti</a>
         </li>
-        <li class="nav-item">
-            <a href="#" class="nav-link">nav-link</a>
-        </li>
-        <li id="helpDropDown"  class="nav-item dropdown">
+        <li id="helpDropDown"  class="tg-nav-item list-inline-item dropdown">
             <a href="#" class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Aiuto</a>
             <div class="dropdown-menu" aria-labelledby="helpDropDown">
                     <a class="dropdown-item" href="#">Action</a>
@@ -25,13 +22,21 @@
                     <a class="dropdown-item" href="#">Something else here</a>
             </div>
         </li>
-        <li id="toggleNavbarPosition" class="nav-item">
+        <li id="toggleNavbarPosition" class="tg-nav-item list-inline-item">
             <a href="#">toggleposition</a>
         </li>
     </ul>
 </nav>
 <section class="tg-dock">
-    <aside class="tg-left-sidebar ">//left sidebar</aside>
+    <aside class="tg-left-sidebar">
+        <ul class="tg-nav-list list-unstyled">
+            <li><a href="#" class="tg-trigger-option">A</a></li>
+            <li><a href="#" class="tg-trigger-option">B</a></li>
+            <li><a href="#" class="tg-trigger-option">C</a></li>
+            <li><a href="#" class="tg-trigger-option">D</a></li>
+            <li><a href="#" class="tg-trigger-option" data-option="004">E</a></li>
+        </ul>
+    </aside>
     <div class="tg-io">
         <div class="tg-output tg-box">
             <div class="tg-border-box">
@@ -50,7 +55,7 @@
                 <div class="tg-border tg-border-bottom"></div>
             </div>
             <input type="text" id="inputfield" value="" placeholder="Cosa vuoi fare?">
-            <button type="button" id="inputsend" class="btn inputsend" value="invia">Invia</button>
+            <button type="button" id="inputsend" class="inputsend" value="invia">Invia</button>
         </div>
     </div>
     <div class="tg-right-sidebar">
@@ -58,8 +63,6 @@
     </div>
 </section>
 {% endblock %}
-
-
 
 {% block borders %}
 
