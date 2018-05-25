@@ -18,7 +18,7 @@ screen is read and displayed by the unlogged-in "look" command.
 from django.conf import settings
 from evennia import utils
 
-CONNECTION_SCREEN = """<h1>Welcome</h1> to |g{}|n, version {}!
+CONNECTION_SCREEN = """Welcome to |g{}|n, version {}!
  If you have an <b>existing account, connect to it by typing:
       |wconnect <username> <password>|n
  If you need to create an account, type (without the <>'s):
