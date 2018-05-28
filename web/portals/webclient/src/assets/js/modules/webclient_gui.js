@@ -2,7 +2,6 @@
 import 'js-cookie';
 import lodash from  'lodash';
 //My Modules
-import 'evennia';
 import {input_history} from 'modules/input_history';
 export default class TgGui {
 
@@ -85,8 +84,7 @@ export default class TgGui {
         // append message to previous ones, then scroll so latest is at
         // the bottom. Send 'cls' kwarg to modify the output class.
         let renderto = "main";
-
-        lodash.isEmpty(kwargs);
+        console.log('kwargs', kwargs);
         if (kwargs["type"] == "help") {
             if (("helppopup" in options) && (options["helppopup"])) {
                 renderto = "#helpdialog";

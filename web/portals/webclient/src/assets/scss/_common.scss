@@ -12,7 +12,6 @@
 html, body {
     width: 100%;
     height: 100%;
-    // background: url('../images/frame/background/dark-wood.jpg') repeat top left;
     background-color: #281e13;
 }
 
@@ -33,33 +32,58 @@ html, body {
     padding: $border-size $border-size 0; 
 }
 
+.tg-box {
+    box-shadow: 0 0 16px 0px rgba(255, 168, 6, 0.8);
+}
+
+
 .tg-io {
     display: flex;
     flex-direction: column;
     flex: 1;
-}
 
-.tg-box {
-    box-shadow: 0 0 16px 0px rgba(0,0,0,0.8);
-}
-
-// Main output area
-.tg-output {
-    display: flex;
-    flex-grow: 1;
-    background-color: $black;
-    color: $white;
-    z-index: 2;
-
-    .tg-output-wrap {
-        width: 100%;
-        z-index: 1;
-        box-sizing: border-box;
-        padding: .5rem;
-        overflow: hidden;
+    // Main output area
+    .tg-output {
+        display: flex;
+        flex-grow: 1;
+        background-color: $black;
+        color: $gray-200;
+        z-index: 2;
+    
+        .tg-output-wrap {
+            width: 100%;
+            z-index: 1;
+            box-sizing: border-box;
+            padding: .5rem;
+            overflow: hidden;
+        }
     }
-
+    
+    // Main Input text area
+    .tg-input {
+        display: flex;
+        overflow: hidden;
+        
+        input[type="text"]{
+            width: 100%;
+            line-height: 24px;
+            background-color: #211f1d;
+            z-index: 2;
+            border: none;
+            color: #FFF;
+            padding: 2px 6px;
+            outline: none;
+        }
+        button[type="button"] {
+            display: none;
+        }
+    }
 }
+
+.tg-shadow-in {
+    box-shadow: inset 0 0 16px 2px black;
+}
+
 
 /*
 * OPTIONS
@@ -77,28 +101,15 @@ html, body {
     }
 }
 .op-005 {
-    
 }
 
 
 
-// Main Input text area
-.tg-input {
-    display: flex;
-    overflow: hidden;
-    
-    input[type="text"]{
-        width: 100%;
-        line-height: 24px;
-        background-color: #211f1d;
-        z-index: 2;
-        border: none;
-        color: #FFF;
-        padding: 2px;        
-    }
-    button[type="button"] {
-        display: none;
-    }
+@include media-breakpoint-down(xs) {
+
+    .tg-dock {
+        padding: #{$border-size / 2} #{$border-size / 2} 0; 
+    }    
 }
 
 

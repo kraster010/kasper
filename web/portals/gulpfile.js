@@ -82,49 +82,59 @@ function getFolders(dir) {
 function generateSprites(done) {
 
 	let dir = P.src.base + P.src.img + 'sprites/';
-	
+	let folders;
+
 	if(fs.existsSync(dir)) {
-		let folders = getFolders(dir),
+		folders = getFolders(dir),
 			cssStream = [],
 			imgStream = [];
+		
+		if(folders.length == 0) {
+			log(chalk.red('No Sprites folder found! (Maybe is not an error, do u have sprites?)'));
+			done();
+		}
+		else {
+			log(chalk.green('Generating ') + chalk.white.bgYellow(folders.length)  + " total sprites..." );
+		
+			for (let i = 0, len = folders.length; i < len; i++) {
+				let sprite_options = {
+					imgName: folders[i] + '_sprite.png',
+					imgPath: '../images/' + folders[i] + '_sprite.png',
+					cssName: "_" + folders[i] + '_sprite.scss',
+					// retinaSrcFilter: P.src.base + P.src.img + folders[i] + '/*@2x.png',
+					// retinaImgName: folders[i] + '_sprite_2x.png',
+					// retinaImgPath: P.static_overrides.base + P.static_overrides.img + folders[i] + '_sprite_2x.png',
+					cssOpts: {
+						functions: false
+					}
+				};
+		
+				// generate our spritesheets
+				let sprite = gulp.src(P.src.base + P.src.img + 'sprites/' + folders[i] + '/**/*.{png,jpg,gif}')
+					.pipe(spritesmith(sprite_options));
+		
+				// output our images locally
+				imgStream[i] = sprite.img.pipe(gulp.dest(P.static_overrides.base + P.static_overrides.img));
+				cssStream[i] = sprite.css;
+		
+				log("	" + chalk.cyan((i + 1)) + " " + sprite_options.imgName);
+			}
+	
+			// if(!Object.keys(imgStream).length) {
+				
+				let imgSpriteList = stream(imgStream)
+				let cssSpriteList = stream(cssStream)
+					.pipe(concat('_sprites.scss'))
+					.pipe(gulp.dest(P.src.static + '/images/'));
+			
+				gutil.log(chalk.green("Sprites generated correctly"));	
+				return stream(imgStream, cssSpriteList)
+			// }
+		}
 	}
 	else return done();
 
 		
-	log(chalk.green('Generating ') + chalk.yellow(folders.length)  + " total sprites..." );
-
-	for (let i = 0, len = folders.length; i < len; i++) {
-		let sprite_options = {
-			imgName: folders[i] + '_sprite.png',
-			imgPath: '../images/' + folders[i] + '_sprite.png',
-			cssName: "_" + folders[i] + '_sprite.scss',
-			// retinaSrcFilter: P.src.base + P.src.img + folders[i] + '/*@2x.png',
-			// retinaImgName: folders[i] + '_sprite_2x.png',
-			// retinaImgPath: P.static_overrides.base + P.static_overrides.img + folders[i] + '_sprite_2x.png',
-			cssOpts: {
-				functions: false
-			}
-		};
-
-		// generate our spritesheets
-		let sprite = gulp.src(P.src.base + P.src.img + 'sprites/' + folders[i] + '/**/*.{png,jpg,gif}')
-			.pipe(spritesmith(sprite_options));
-
-		// output our images locally
-		imgStream[i] = sprite.img.pipe(gulp.dest(P.static_overrides.base + P.static_overrides.img));
-		cssStream[i] = sprite.css;
-
-		log("	" + chalk.cyan((i + 1)) + " " + sprite_options.imgName);
-	}
-	
-	let imgSpriteList = stream(imgStream)
-	let cssSpriteList = stream(cssStream)
-		.pipe(concat('_sprites.scss'))
-		.pipe(gulp.dest(P.src.static + '/images/'));
-
-	gutil.log(chalk.green("Sprites generated correctly"));
-
-	return stream(imgStream, cssSpriteList)
 }
 
 

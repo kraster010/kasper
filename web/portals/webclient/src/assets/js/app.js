@@ -1,10 +1,11 @@
-import Gui from './modules/webclient_gui';
+import 'evennia';
+import gui from './modules/webclient_gui';
 
 (function(document, window) {
 
     TG.onReady = function() {
-        TG.Gui = new Gui();
-        TG.Gui.init();
+        TG.gui = new gui();
+        TG.gui.init();
     };
 
  $(document).ready(TG.onReady);
