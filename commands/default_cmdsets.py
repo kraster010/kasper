@@ -15,6 +15,7 @@ own cmdsets by inheriting from them or directly from `evennia.CmdSet`.
 """
 from commands import command
 from commands.tg_character_cmdset import TGCharacterCmdSet
+from commands.tg_combat_cmdset import TGCombatCmdSet
 from commands.tg_social_cmdset import TGSocialSystemCmdSet
 from evennia import default_cmds
 
@@ -38,6 +39,7 @@ class CharacterCmdSet(default_cmds.CharacterCmdSet):
         self.add(TGCharacterCmdSet())
         self.add(TGSocialSystemCmdSet())
         self.add(command.ShowMap())
+        self.add(TGCombatCmdSet())
 
 
 class AccountCmdSet(default_cmds.AccountCmdSet):

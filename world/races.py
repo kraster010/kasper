@@ -90,6 +90,32 @@ class Race(object):
             ('corpo', ('armatura',)),
         )
 
+        # base traits data
+        self.traits = {
+            # primary
+            'STR': {'type': 'static', 'base': 1, 'mod': 0, 'name': 'Forza'},
+            'COS': {'type': 'static', 'base': 1, 'mod': 0, 'name': 'Costituzione'},
+            'DEX': {'type': 'static', 'base': 1, 'mod': 0, 'name': 'Destrezza'},
+            'INT': {'type': 'static', 'base': 1, 'mod': 0, 'name': 'Intelligenza'},
+            'CHA': {'type': 'static', 'base': 1, 'mod': 0, 'name': 'Carisma'},
+
+            # secondary
+            'PF': {'type': 'gauge', 'base': 0, 'mod': 0, 'name': 'Punti Ferita'},
+            'PM': {'type': 'gauge', 'base': 0, 'mod': 0, 'name': 'Punti Movimento'},
+
+            # saves
+            'FORT': {'type': 'static', 'base': 0, 'mod': 0, 'name': 'Tempra'},
+            'REFL': {'type': 'static', 'base': 0, 'mod': 0, 'name': 'Riflessi'},
+            'WILL': {'type': 'static', 'base': 0, 'mod': 0, 'name': 'Volontà'},
+
+            # combat
+            'TCP': {'type': 'static', 'base': 0, 'mod': 0, 'name': 'Tiro Per Colpire'},
+            'CA': {'type': 'static', 'base': 0, 'mod': 0, 'name': 'Classe Armatura'},
+
+            # misc
+            'ENC': {'type': 'counter', 'base': 0, 'mod': 0, 'min': 0, 'name': 'Ingombro'},
+        }
+
     def apply_to(self, obj):
         obj.db.slots = self.slots
         obj.db.limbs = self.limbs
@@ -97,9 +123,12 @@ class Race(object):
         temp = self.race_oa(gender=obj.db.gender)
         obj.db.race_name = temp
         obj.sdesc.add("un %s" % temp.capitalize())
+        obj.traits.clear()
+        for key, kwargs in self.traits.iteritems():
+            obj.traits.add(key, **kwargs)
 
-    def race_oa(self, gender="m", type="s"):
-        return self.femminile[type] if gender == "f" else self.maschile[type]
+    def race_oa(self, gender="m", s_or_p="s"):
+        return self.femminile[s_or_p] if gender == "f" else self.maschile[s_or_p]
 
 
 class Umani(Race):
@@ -111,7 +140,12 @@ class Umani(Race):
         self.maschile = dict(s="uomo", p="uomini")
         self.femminile = dict(s="donna", p="donne")
         self.altezza = dict(m=170, f=170)
-
+        # set starting trait values
+        self.traits['STR']['base'] = 50
+        self.traits['COS']['base'] = 50
+        self.traits['DEX']['base'] = 50
+        self.traits['INT']['base'] = 50
+        self.traits['PM']['base'] = 7
 
 class Elfi(Race):
     """Class representing elf attributes."""
@@ -122,3 +156,9 @@ class Elfi(Race):
         self.maschile = dict(s="elfo", p="elfi")
         self.femminile = dict(s="elfa", p="elfe")
         self.altezza = dict(m=170, f=170)
+        # set starting trait values
+        self.traits['STR']['base'] = 40
+        self.traits['COS']['base'] = 50
+        self.traits['DEX']['base'] = 60
+        self.traits['INT']['base'] = 50
+        self.traits['PM']['base'] = 7

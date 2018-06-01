@@ -38,32 +38,32 @@ See the `@spawn` command and `evennia.utils.spawner` for more info.
 
 #from random import randint
 #
-GOBLIN = {
-"key": "goblin grunt",
-"health": lambda: randint(20,30),
-"resists": ["cold", "poison"],
-"attacks": ["fists"],
-"weaknesses": ["fire", "light"]
-}
-
-GOBLIN_WIZARD = {
-"prototype": "GOBLIN",
-"key": "goblin wizard",
-"spells": ["fire ball", "lighting bolt"]
-}
-
-GOBLIN_ARCHER = {
-"prototype": "GOBLIN",
-"key": "goblin archer",
-"attacks": ["short bow"]
-}
-
-ARCHWIZARD_MIXIN = {
-"attacks": ["archwizard staff"],
-"spells": ["greater fire ball", "greater lighting"]
-}
-
-GOBLIN_ARCHWIZARD = {
-"key": "goblin archwizard",
-"prototype" : ("GOBLIN_WIZARD", "ARCHWIZARD_MIXIN")
-}
+# GOBLIN = {
+# "key": "goblin grunt",
+# "health": lambda: randint(20,30),
+# "resists": ["cold", "poison"],
+# "attacks": ["fists"],
+# "weaknesses": ["fire", "light"]
+# }
+#
+# GOBLIN_WIZARD = {
+# "prototype": "GOBLIN",
+# "key": "goblin wizard",
+# "spells": ["fire ball", "lighting bolt"]
+# }
+#
+# GOBLIN_ARCHER = {
+# "prototype": "GOBLIN",
+# "key": "goblin archer",
+# "attacks": ["short bow"]
+# }
+#
+# ARCHWIZARD_MIXIN = {
+# "attacks": ["archwizard staff"],
+# "spells": ["greater fire ball", "greater lighting"]
+# }
+#
+# GOBLIN_ARCHWIZARD = {
+# "key": "goblin archwizard",
+# "prototype" : ("GOBLIN_WIZARD", "ARCHWIZARD_MIXIN")
+# }
