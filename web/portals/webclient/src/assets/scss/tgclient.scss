@@ -8,5 +8,24 @@
 @import "colors";
 @import "common";
 
+// DEBUG CONTAINER ---------------------- 
+
+#debug {
+    border: 2px solid red;
+    max-height:400px;
+    overflow: auto;
+    margin: 2px;
+    line-height: 1;
+    min-height: 250px;
+    padding:10px 12px;
+    &:before {
+        content: 'DEBUG -----';
+        display:block;
+        font-size:10px;
+        color: #333;
+    }
+}
+
+
 
 

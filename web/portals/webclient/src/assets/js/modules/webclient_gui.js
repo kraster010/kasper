@@ -1,5 +1,6 @@
 //NPM Modules
 import 'js-cookie';
+import 'malihu-custom-scrollbar-plugin';
 import lodash from  'lodash';
 //My Modules
 import {input_history} from 'modules/input_history';
@@ -38,6 +39,7 @@ export default class TgGui {
             console.log("%c Attenzione, i LOG client sono attivi.", 'background: red; color: white');
         }
     }
+
 
     initHandshake() {
 
@@ -280,7 +282,7 @@ export default class TgGui {
     }
 
     // Appends any kind of message inside Debug Output box
-    clog(msg) {
+    tglog(msg) {
         if (msg) {
             $('#debug').append('DEBUG MSG: ' + msg);
         }

@@ -50,19 +50,15 @@
   </head>
 
   <body data-theme="iron">
-    <div id="connecting">
-        {% block connecting %}
-        {% endblock %}
-    </div>
-
     {% block nojavascript %}
     {% endblock %}
-
-
-
     <!-- main client -->
     <div class="tg-area tg">
         {% block client %}
+        {% endblock %}
+    </div>
+    <div id="connecting">
+        {% block connecting %}
         {% endblock %}
     </div>
   </body>

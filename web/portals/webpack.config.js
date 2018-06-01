@@ -67,21 +67,21 @@ module.exports = function(portal = "webclient", config) {
         // ],
     
         optimization: {
-            // runtimeChunk: {
-            //     name: 'vendor'
-            // },
-            // splitChunks: {
-            //     cacheGroups: {
-            //         vendor: {
-            //             test: path.resolve(__dirname, "node_modules"),
-            //             chunks: "initial",
-            //             name: "vendor",
-            //             minChunks: 1,
-            //             priority: 10,
-            //             enforce: true
-            //         }
-            //     }
-            // }
+            runtimeChunk: {
+                name: 'vendor'
+            },
+            splitChunks: {
+                cacheGroups: {
+                    vendor: {
+                        test: path.resolve(__dirname, "node_modules"),
+                        chunks: "initial",
+                        name: "vendor",
+                        minChunks: 1,
+                        priority: 10,
+                        enforce: true
+                    }
+                }
+            }
         },
     
         stats: {

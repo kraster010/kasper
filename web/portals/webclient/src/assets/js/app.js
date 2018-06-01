@@ -1,3 +1,5 @@
+/*  TG 2.0 @2018
+    Main Client Entry Point */
 import 'evennia';
 import gui from './modules/webclient_gui';
 
